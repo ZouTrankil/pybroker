@@ -1,6 +1,6 @@
 """Contains portfolio related functionality, such as portfolio metrics and
 placing orders.
-"""
+"""  # 包含投资组合相关功能，如投资组合指标和下单
 
 """Copyright (C) 2023 Edward West. All rights reserved.
 
@@ -35,35 +35,33 @@ from typing import (
     Union,
 )
 
-_DECIMAL_100: Final = Decimal(100)
+_DECIMAL_100: Final = Decimal(100)  # 用于百分比计算的常量
 
 
 class Stop(NamedTuple):
-    """Contains information about a stop set on :class:`.Entry`.
-
-    Attributes:
-        id: Unique identifier.
-        symbol: Symbol of the stop.
-        stop_type: :class:`.StopType`.
-        pos_type: Type of  :class:`.Position`, either ``long`` or ``short``.
-        percent: Percent from entry price.
-        points: Cash amount from entry price.
-        bars: Number of bars after which to trigger the stop.
-        fill_price: Price that the stop will be filled at.
-        limit_price: Limit price to use for the stop.
-        exit_price: Exit :class:`pybroker.common.PriceType` to use for the
-            stop exit. If set, the stop is checked against the ``exit_price``
-            and exits at the ``exit_price`` when triggered.
+    """包含有关设置在Entry上的止损信息
+    
+    属性:
+        id: 唯一标识符
+        symbol: 止损的股票代码
+        stop_type: 止损类型
+        pos_type: 仓位类型，"long"(多头)或"short"(空头)
+        percent: 入场价格的百分比
+        points: 入场价格的现金金额
+        bars: 触发止损的K线数量
+        fill_price: 止损将成交的价格
+        limit_price: 止损使用的限价
+        exit_price: 用于止损退出的价格类型，如果设置，止损将根据exit_price检查并以exit_price退出
     """
 
-    id: int
-    symbol: str
-    stop_type: StopType
-    pos_type: Literal["long", "short"]
-    percent: Optional[Decimal]
-    points: Optional[Decimal]
-    bars: Optional[int]
-    fill_price: Optional[
+    id: int  # 唯一标识符
+    symbol: str  # 股票代码
+    stop_type: StopType  # 止损类型
+    pos_type: Literal["long", "short"]  # 仓位类型
+    percent: Optional[Decimal]  # 百分比
+    points: Optional[Decimal]  # 点数
+    bars: Optional[int]  # K线数
+    fill_price: Optional[  # 成交价格
         Union[
             int,
             float,
@@ -73,231 +71,228 @@ class Stop(NamedTuple):
             Callable[[str, BarData], Union[int, float, Decimal]],
         ]
     ]
-    limit_price: Optional[Decimal]
-    exit_price: Optional[PriceType]
+    limit_price: Optional[Decimal]  # 限价
+    exit_price: Optional[PriceType]  # 退出价格类型
 
 
 class StopRecord(NamedTuple):
-    """Records per-bar data about a stop.
-
-    Attributes:
-        date: Date of the bar.
-        symbol: Symbol of the stop.
-        stop_id: Unique identifier.
-        stop_type: :class:`.StopType`.
-        pos_type: Type of  :class:`.Position`, either ``long`` or ``short``.
-        curr_value: Current value of the stop.
-        curr_bars: Current bars of the stop.
-        percent: Percent from entry price.
-        points: Cash amount from entry price.
-        bars: Number of bars after which to trigger the stop.
-        fill_price: Price that the stop will be filled at.
-        limit_price: Limit price to use for the stop.
-        exit_price: Exit :class:`pybroker.common.PriceType` to use for the
-            stop exit. If set, the stop is checked against the ``exit_price``
-            and exits at the ``exit_price`` when triggered.
+    """记录每个K线关于止损的数据
+    
+    属性:
+        date: K线的日期
+        symbol: 止损的股票代码
+        stop_id: 唯一标识符
+        stop_type: 止损类型
+        pos_type: 仓位类型，"long"(多头)或"short"(空头)
+        curr_value: 止损的当前值
+        curr_bars: 止损的当前K线数
+        percent: 入场价格的百分比
+        points: 入场价格的现金金额
+        bars: 触发止损的K线数量
+        fill_price: 止损将成交的价格
+        limit_price: 止损使用的限价
+        exit_price: 用于止损退出的价格类型
     """
 
-    date: np.datetime64
-    symbol: str
-    stop_id: int
-    stop_type: str
-    pos_type: Literal["long", "short"]
-    curr_value: Optional[Decimal]
-    curr_bars: Optional[int]
-    percent: Optional[Decimal]
-    points: Optional[Decimal]
-    bars: Optional[int]
-    fill_price: Optional[Decimal]
-    limit_price: Optional[Decimal]
-    exit_price: Optional[PriceType]
+    date: np.datetime64  # 日期
+    symbol: str  # 股票代码
+    stop_id: int  # 止损ID
+    stop_type: str  # 止损类型
+    pos_type: Literal["long", "short"]  # 仓位类型
+    curr_value: Optional[Decimal]  # 当前值
+    curr_bars: Optional[int]  # 当前K线数
+    percent: Optional[Decimal]  # 百分比
+    points: Optional[Decimal]  # 点数
+    bars: Optional[int]  # K线数
+    fill_price: Optional[Decimal]  # 成交价格
+    limit_price: Optional[Decimal]  # 限价
+    exit_price: Optional[PriceType]  # 退出价格类型
 
 
 @dataclass
 class Entry:
-    """Contains information about an entry into a :class:`.Position`.
-
-    Attributes:
-        id: Unique identifier.
-        date: Date of the entry.
-        symbol: Symbol of the entry.
-        shares: Number of shares.
-        price: Share price of the entry.
-        type: Type of  :class:`.Position`, either ``long`` or ``short``.
-        bars: Current number of bars since entry.
-        stops: Stops set on the entry.
-        mae: Maximum adverse excursion (MAE).
-        mfe: Maximum favorable excursion (MFE).
+    """包含进入Position的入场信息
+    
+    属性:
+        id: 唯一标识符
+        date: 入场日期
+        symbol: 入场的股票代码
+        shares: 股数
+        price: 入场价格
+        type: 仓位类型，"long"(多头)或"short"(空头)
+        bars: 自入场以来的当前K线数量
+        stops: 设置在入场上的止损
+        mae: 最大不利偏移(Maximum Adverse Excursion)
+        mfe: 最大有利偏移(Maximum Favorable Excursion)
     """
 
-    id: int
-    date: np.datetime64
-    symbol: str
-    shares: Decimal
-    price: Decimal
-    type: Literal["long", "short"]
-    bars: int = field(default=0)
-    stops: list[Stop] = field(default_factory=list)
-    mae: Decimal = field(default_factory=Decimal)
-    mfe: Decimal = field(default_factory=Decimal)
+    id: int  # 唯一标识符
+    date: np.datetime64  # 入场日期
+    symbol: str  # 股票代码
+    shares: Decimal  # 股数
+    price: Decimal  # 价格
+    type: Literal["long", "short"]  # 仓位类型
+    bars: int = field(default=0)  # K线数
+    stops: list[Stop] = field(default_factory=list)  # 止损列表
+    mae: Decimal = field(default_factory=Decimal)  # 最大不利偏移
+    mfe: Decimal = field(default_factory=Decimal)  # 最大有利偏移
 
 
 @dataclass
 class _StopData:
-    value: Decimal
-    stop: Stop
-    entry: Entry
+    """内部使用的止损数据类"""
+    value: Decimal  # 值
+    stop: Stop  # 止损对象
+    entry: Entry  # 入场对象
 
 
 @dataclass
 class Position:
-    r"""Contains information about an open position in ``symbol``.
-
-    Attributes:
-        symbol: Ticker symbol of the position.
-        shares: Number of shares.
-        type: Type of position, either ``long`` or ``short``.
-        close: Last close price of ``symbol``.
-        equity: Equity in the position.
-        market_value: Market value of position.
-        margin: Amount of margin in position.
-        pnl: Unrealized profit and loss (PnL).
-        entries: ``deque`` of position :class:`.Entry`\ s sorted in ascending
-            chronological order.
-        bars: Current number of bars since entry.
+    r"""包含symbol中的持仓信息
+    
+    属性:
+        symbol: 持仓的股票代码
+        shares: 股数
+        type: 持仓类型，"long"(多头)或"short"(空头)
+        close: symbol的最新收盘价
+        equity: 持仓的权益
+        market_value: 持仓的市场价值
+        margin: 持仓中的保证金金额
+        pnl: 未实现的盈亏
+        entries: 按时间升序排列的入场信息队列
+        bars: 自入场以来的当前K线数量
     """
 
-    symbol: str
-    shares: Decimal
-    type: Literal["long", "short"]
-    close: Decimal = field(default_factory=Decimal)
-    equity: Decimal = field(default_factory=Decimal)
-    market_value: Decimal = field(default_factory=Decimal)
-    margin: Decimal = field(default_factory=Decimal)
-    pnl: Decimal = field(default_factory=Decimal)
-    entries: deque[Entry] = field(default_factory=deque)
-    bars: int = field(default=0)
+    symbol: str  # 股票代码
+    shares: Decimal  # 股数
+    type: Literal["long", "short"]  # 仓位类型
+    close: Decimal = field(default_factory=Decimal)  # 收盘价
+    equity: Decimal = field(default_factory=Decimal)  # 权益
+    market_value: Decimal = field(default_factory=Decimal)  # 市值
+    margin: Decimal = field(default_factory=Decimal)  # 保证金
+    pnl: Decimal = field(default_factory=Decimal)  # 盈亏
+    entries: deque[Entry] = field(default_factory=deque)  # 入场队列
+    bars: int = field(default=0)  # K线数
 
 
 class Trade(NamedTuple):
-    """Holds information about a completed trade (entry and exit).
-
-    Attributes:
-        id: Unique identifier.
-        type: Type of trade, either ``long`` or ``short``.
-        symbol: Ticker symbol of the trade.
-        entry_date: Entry date.
-        exit_date: Exit date.
-        entry: Entry price.
-        exit: Exit price.
-        shares: Number of shares.
-        pnl: Profit and loss (PnL).
-        return_pct: Return measured in percentage.
-        agg_pnl: Aggregate profit and loss (PnL) of the strategy after
-            the trade.
-        bars: Number of bars the trade was held.
-        pnl_per_bar: Profit and loss (PnL) per bar held.
-        stop: Type of stop that was triggered, if any.
-        mae: Maximum adverse excursion (MAE).
-        mfe: Maximum favorable excursion (MFE).
+    """持有关于完成交易(入场和出场)的信息
+    
+    属性:
+        id: 唯一标识符
+        type: 交易类型，"long"(多头)或"short"(空头)
+        symbol: 交易的股票代码
+        entry_date: 入场日期
+        exit_date: 出场日期
+        entry: 入场价格
+        exit: 出场价格
+        shares: 股数
+        pnl: 盈亏
+        return_pct: 以百分比计量的回报
+        agg_pnl: 交易后策略的累计盈亏
+        bars: 交易持有的K线数量
+        pnl_per_bar: 每个K线的盈亏
+        stop: 触发的止损类型，如果有的话
+        mae: 最大不利偏移
+        mfe: 最大有利偏移
     """
 
-    id: int
-    type: Literal["long", "short"]
-    symbol: str
-    entry_date: np.datetime64
-    exit_date: np.datetime64
-    entry: Decimal
-    exit: Decimal
-    shares: Decimal
-    pnl: Decimal
-    return_pct: Decimal
-    agg_pnl: Decimal
-    bars: int
-    pnl_per_bar: Decimal
-    stop: Optional[Literal["bar", "loss", "profit", "trailing"]]
-    mae: Decimal
-    mfe: Decimal
+    id: int  # 唯一标识符
+    type: Literal["long", "short"]  # 交易类型
+    symbol: str  # 股票代码
+    entry_date: np.datetime64  # 入场日期
+    exit_date: np.datetime64  # 出场日期
+    entry: Decimal  # 入场价格
+    exit: Decimal  # 出场价格
+    shares: Decimal  # 股数
+    pnl: Decimal  # 盈亏
+    return_pct: Decimal  # 回报率
+    agg_pnl: Decimal  # 累计盈亏
+    bars: int  # K线数
+    pnl_per_bar: Decimal  # 每K线盈亏
+    stop: Optional[Literal["bar", "loss", "profit", "trailing"]]  # 止损类型
+    mae: Decimal  # 最大不利偏移
+    mfe: Decimal  # 最大有利偏移
 
 
 class Order(NamedTuple):
-    """Holds information about a filled order.
-
-    Attributes:
-        id: Unique identifier.
-        type: Type of order, either ``buy`` or ``sell``.
-        symbol: Ticker symbol of the order.
-        date: Date the order was filled.
-        shares: Number of shares bought or sold.
-        limit_price: Limit price that was used for the order.
-        fill_price: Price that the order was filled at.
-        fees: Brokerage fees for order.
+    """持有关于已成交订单的信息
+    
+    属性:
+        id: 唯一标识符
+        type: 订单类型，"buy"(买入)或"sell"(卖出)
+        symbol: 订单的股票代码
+        date: 订单成交的日期
+        shares: 买入或卖出的股数
+        limit_price: 订单使用的限价
+        fill_price: 订单成交的价格
+        fees: 订单的经纪费用
     """
 
-    id: int
-    type: Literal["buy", "sell"]
-    symbol: str
-    date: np.datetime64
-    shares: Decimal
-    limit_price: Optional[Decimal]
-    fill_price: Decimal
-    fees: Decimal
+    id: int  # 唯一标识符
+    type: Literal["buy", "sell"]  # 订单类型
+    symbol: str  # 股票代码
+    date: np.datetime64  # 日期
+    shares: Decimal  # 股数
+    limit_price: Optional[Decimal]  # 限价
+    fill_price: Decimal  # 成交价格
+    fees: Decimal  # 费用
 
 
 class PortfolioBar(NamedTuple):
-    """Snapshot of :class:`.Portfolio` state, captured per bar.
-
-    Attributes:
-        date: Date of bar.
-        cash: Amount of cash in :class:`.Portfolio`.
-        equity: Amount of equity in :class:`.Portfolio`.
-        margin: Amount of margin in :class:`.Portfolio`.
-        market_value: Market value of :class:`.Portfolio`.
-        pnl: Realized profit and loss (PnL) of :class:`.Portfolio`.
-        unrealized_pnl: Unrealized profit and loss (PnL) of
-            :class:`.Portfolio`.
-        fees: Brokerage fees.
+    """每个K线捕获的Portfolio状态快照
+    
+    属性:
+        date: K线的日期
+        cash: Portfolio中的现金金额
+        equity: Portfolio中的权益金额
+        margin: Portfolio中的保证金金额
+        market_value: Portfolio的市场价值
+        pnl: Portfolio的已实现盈亏
+        unrealized_pnl: Portfolio的未实现盈亏
+        fees: 经纪费用
     """
 
-    date: np.datetime64
-    cash: Decimal
-    equity: Decimal
-    margin: Decimal
-    market_value: Decimal
-    pnl: Decimal
-    unrealized_pnl: Decimal
-    fees: Decimal
+    date: np.datetime64  # 日期
+    cash: Decimal  # 现金
+    equity: Decimal  # 权益
+    margin: Decimal  # 保证金
+    market_value: Decimal  # 市值
+    pnl: Decimal  # 已实现盈亏
+    unrealized_pnl: Decimal  # 未实现盈亏
+    fees: Decimal  # 费用
 
 
 class PositionBar(NamedTuple):
-    r"""Snapshot of an open :class:`.Position`\ 's state, captured per bar.
-
-    Attributes:
-        symbol: Ticker symbol of :class:`.Position`.
-        date: Date of bar.
-        long_shares: Number of shares long in :class:`.Position`.
-        short_shares: Number of shares short in :class:`.Position`.
-        close: Last close price of ``symbol``.
-        equity: Amount of equity in :class:`.Position`.
-        market_value: Market value of :class:`.Position`.
-        margin: Amount of margin in :class:`.Position`.
-        unrealized_pnl: Unrealized profit and loss (PnL) of :class:`.Position`.
+    r"""每个K线捕获的持仓状态快照
+    
+    属性:
+        symbol: 持仓的股票代码
+        date: K线的日期
+        long_shares: 持仓中的多头股数
+        short_shares: 持仓中的空头股数
+        close: symbol的最新收盘价
+        equity: 持仓中的权益金额
+        market_value: 持仓的市场价值
+        margin: 持仓中的保证金金额
+        unrealized_pnl: 持仓的未实现盈亏
     """
 
-    symbol: str
-    date: np.datetime64
-    long_shares: Decimal
-    short_shares: Decimal
-    close: Decimal
-    equity: Decimal
-    market_value: Decimal
-    margin: Decimal
-    unrealized_pnl: Decimal
+    symbol: str  # 股票代码
+    date: np.datetime64  # 日期
+    long_shares: Decimal  # 多头股数
+    short_shares: Decimal  # 空头股数
+    close: Decimal  # 收盘价
+    equity: Decimal  # 权益
+    market_value: Decimal  # 市值
+    margin: Decimal  # 保证金
+    unrealized_pnl: Decimal  # 未实现盈亏
 
 
 class _OrderResult(NamedTuple):
-    filled_shares: Decimal
-    rem_shares: Decimal
+    """内部使用的订单结果类"""
+    filled_shares: Decimal  # 成交股数
+    rem_shares: Decimal  # 剩余股数
 
 
 def _calculate_pnl_mae_mfe(
@@ -306,6 +301,10 @@ def _calculate_pnl_mae_mfe(
     low: Optional[Decimal],
     high: Optional[Decimal],
 ):
+    """计算持仓的盈亏、最大不利偏移(MAE)和最大有利偏移(MFE)
+    
+    根据当前价格、最低价和最高价更新持仓的盈亏和偏移指标
+    """
     if pos.type != "long" and pos.type != "short":
         raise ValueError(f"Unknown position type: {pos.type}")
     pnl = Decimal()

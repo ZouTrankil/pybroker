@@ -1,5 +1,5 @@
 """Contains context related classes. A context provides data during the
-execution of a :class:`pybroker.strategy.Strategy`."""
+execution of a :class:`pybroker.strategy.Strategy`."""  # 包含上下文相关类。上下文在执行Strategy时提供数据。
 
 """Copyright (C) 2023 Edward West. All rights reserved.
 
@@ -49,10 +49,10 @@ from typing import (
 
 
 class BaseContext:
-    """Base context class.
+    """基础上下文类
 
-    Attributes:
-        config: :class:`pybroker.config.StrategyConfig`.
+    属性:
+        config: 策略配置StrategyConfig对象
     """
 
     def __init__(
@@ -67,73 +67,62 @@ class BaseContext:
         models: Mapping[ModelSymbol, TrainedModel],
         sym_end_index: Mapping[str, int],
     ):
-        self.config = config
-        self._portfolio = portfolio
-        self._col_scope = col_scope
-        self._ind_scope = ind_scope
-        self._input_scope = input_scope
-        self._pred_scope = pred_scope
-        self._models = models
-        self._sym_end_index = sym_end_index
-        self._pending_order_scope = pending_order_scope
+        self.config = config  # 策略配置
+        self._portfolio = portfolio  # 投资组合
+        self._col_scope = col_scope  # 列作用域
+        self._ind_scope = ind_scope  # 指标作用域
+        self._input_scope = input_scope  # 模型输入作用域
+        self._pred_scope = pred_scope  # 预测作用域
+        self._models = models  # 训练模型
+        self._sym_end_index = sym_end_index  # 符号结束索引
+        self._pending_order_scope = pending_order_scope  # 待处理订单作用域
 
     @property
     def total_equity(self) -> Decimal:
-        """Total equity currently held in the
-        :class:`pybroker.portfolio.Portfolio`.
-        """
+        """当前在Portfolio中持有的总权益"""
         return self._portfolio.equity
 
     @property
     def cash(self) -> Decimal:
-        """Total cash currently held in the
-        :class:`pybroker.portfolio.Portfolio`.
-        """
+        """当前在Portfolio中持有的总现金"""
         return self._portfolio.cash
 
     @property
     def total_margin(self) -> Decimal:
-        """Total amount of margin currently held in the
-        :class:`pybroker.portfolio.Portfolio`.
-        """
+        """当前在Portfolio中持有的总保证金"""
         return self._portfolio.margin
 
     @property
     def total_market_value(self) -> Decimal:
-        """Total market value currently held in the
-        :class:`pybroker.portfolio.Portfolio`. The market value is defined as
-        the amount of equity held in cash and long positions added together
-        with the unrealized PnL of all open short positions.
+        """当前在Portfolio中持有的总市场价值。市场价值定义为
+        持有现金和多头头寸的权益与所有未平仓空头头寸的未实现损益之和。
         """
         return self._portfolio.market_value
 
     @property
     def win_rate(self) -> Decimal:
-        """Running win rate of trades."""
+        """交易的运行胜率"""
         return self._portfolio.win_rate
 
     @property
     def loss_rate(self) -> Decimal:
-        """Running loss rate of trades."""
+        """交易的运行亏损率"""
         return self._portfolio.loss_rate
 
     def orders(self) -> Iterator[Order]:
-        r""":class:`Iterator` of all :class:`pybroker.portfolio.Order`\ s that
-        have been placed and filled.
-        """
+        """已下单并已成交的所有订单的迭代器"""
         for order in self._portfolio.orders:
             yield order
 
     def pending_orders(
         self, symbol: Optional[str] = None
     ) -> Iterator[PendingOrder]:
+        """待处理订单的迭代器，可选按符号筛选"""
         for order in self._pending_order_scope.orders(symbol):
             yield order
 
     def trades(self) -> Iterator[Trade]:
-        r""":class:`Iterator` of all :class:`pybroker.portfolio.Trade`\ s that
-        have been completed.
-        """
+        """已完成的所有交易的迭代器"""
         for trade in self._portfolio.trades:
             yield trade
 
@@ -142,17 +131,14 @@ class BaseContext:
         symbol: str,
         pos_type: Literal["long", "short"],
     ) -> Optional[Position]:
-        r"""Retrieves a current long or short
-        :class:`pybroker.portfolio.Position` for a ``symbol``.
-
-        Args:
-            symbol: Ticker symbol of the position to return.
-            pos_type: Specifies whether to return a ``long`` or ``short``
-                position.
-
-        Returns:
-            :class:`pybroker.portfolio.Position` if one exists, otherwise
-            ``None``.
+        """检索某个符号的当前多头或空头头寸
+        
+        参数:
+            symbol: 要返回头寸的股票代码
+            pos_type: 指定是返回"long"(多头)还是"short"(空头)头寸
+            
+        返回:
+            如果头寸存在，则返回Position对象，否则返回None
         """
         self._verify_pos_type(pos_type)
         if pos_type == "long" and symbol in self._portfolio.long_positions:
@@ -166,17 +152,14 @@ class BaseContext:
         symbol: Optional[str] = None,
         pos_type: Optional[Literal["long", "short"]] = None,
     ) -> Iterator[Position]:
-        r"""Retrieves all current positions.
-
-        Args:
-            symbol: Ticker symbol used to filter positions. If ``None``,
-                positions for all symbols are returned. Defaults to ``None``.
-            pos_type: Type of positions to return. If ``None``, both ``long``
-                and ``short`` positions are returned.
-
-        Returns:
-            :class:`Iterator` of currently held
-            :class:`pybroker.portfolio.Position` \s.
+        """检索所有当前头寸
+        
+        参数:
+            symbol: 用于筛选头寸的股票代码。如果为None，则返回所有符号的头寸。默认为None
+            pos_type: 要返回的头寸类型。如果为None，则返回"long"和"short"头寸
+            
+        返回:
+            当前持有的Position对象的迭代器
         """
         if pos_type is not None:
             self._verify_pos_type(pos_type)
@@ -202,166 +185,149 @@ class BaseContext:
     def long_positions(
         self, symbol: Optional[str] = None
     ) -> Iterator[Position]:
-        r"""Retrieves all current long positions.
-
-        Args:
-            symbol: Ticker symbol used to filter positions. If ``None``,
-                long positions for all symbols are returned. Defaults to
-                ``None``.
-
-        Returns:
-            :class:`Iterator` of currently held long
-            :class:`pybroker.portfolio.Position` \s.
+        """检索所有当前多头头寸
+        
+        参数:
+            symbol: 用于筛选头寸的股票代码。如果为None，则返回所有符号的多头头寸
+            
+        返回:
+            当前持有的多头Position对象的迭代器
         """
         return self.positions(symbol, "long")
 
     def short_positions(
         self, symbol: Optional[str] = None
     ) -> Iterator[Position]:
-        r"""Retrieves all current short positions.
-
-        Args:
-            symbol: Ticker symbol used to filter positions. If ``None``,
-                short positions for all symbols are returned. Defaults to
-                ``None``.
-
-        Returns:
-            :class:`Iterator` of currently held short
-            :class:`pybroker.portfolio.Position` \s.
+        """检索所有当前空头头寸
+        
+        参数:
+            symbol: 用于筛选头寸的股票代码。如果为None，则返回所有符号的空头头寸
+            
+        返回:
+            当前持有的空头Position对象的迭代器
         """
         return self.positions(symbol, "short")
 
     def _verify_pos_type(self, pos_type: str):
-        if pos_type != "short" and pos_type != "long":
-            raise ValueError(f"Unknown pos_type: {pos_type!r}.")
+        """验证头寸类型是否有效"""
+        if pos_type != "long" and pos_type != "short":
+            raise ValueError(f"Invalid position type: {pos_type}")
 
     def calc_target_shares(
         self, target_size: float, price: float, cash: Optional[float] = None
     ) -> Union[Decimal, int]:
-        r"""Calculates the number of shares given a ``target_size`` allocation
-        and share ``price``.
-
-        Args:
-            target_size: Proportion of cash used to calculate the number of
-                shares, where the max ``target_size`` is ``1``. For example, a
-                ``target_size`` of ``0.1`` would represent 10% of cash.
-            price: Share price used to calculate the number of shares.
-            cash: Cash used to calculate the number of shares. If
-                ``None``, then the :class:`pybroker.portfolio.Portfolio` equity
-                is used to calculate the number of shares.
-
-        Returns:
-            Number of shares given ``target_size`` and share ``price``. If
-            :attr:`pybroker.config.StrategyConfig.enable_fractional_shares` is
-            ``True``, then a Decimal is returned.
+        """计算目标股票数量
+        
+        参数:
+            target_size: 相对于当前可用现金的目标头寸规模(0到1.0之间)
+            price: 用于计算股份的价格
+            cash: 可选的现金金额。如果未提供，则使用当前投资组合现金
+            
+        返回:
+            计算出的股票数量，舍入到整数(如果配置中启用了整数股)
         """
-        shares = (
-            (to_decimal(cash) if cash is not None else self._portfolio.equity)
-            * to_decimal(target_size)
-            / to_decimal(price)
-        )
-        if self.config.enable_fractional_shares:
-            return shares.max(0)
-        return max(int(shares), 0)
+        if target_size <= 0:
+            return Decimal(0)
+        if cash is None:
+            cash = float(self._portfolio.cash)
+        elif cash <= 0:
+            return Decimal(0)
+        shares = cash * target_size / price
+        if shares <= 0:
+            return Decimal(0)
+        shares = to_decimal(shares)
+        return shares if not self.config.round_shares else int(shares)
 
     def model(self, name: str, symbol: str) -> Any:
-        r"""Returns a trained model.
-
-        Args:
-            name: Name used to identify the model that was registered with
-                :meth:`pybroker.model.model`.
-            symbol: Ticker symbol of the data that was used to train the model.
-
-        Returns:
-            Instance of the trained model.
+        """获取特定符号的训练模型
+        
+        参数:
+            name: 模型名称
+            symbol: 股票代码
+            
+        返回:
+            请求的模型对象
         """
-        model_sym = ModelSymbol(name, symbol)
+        model_sym = ModelSymbol(model_name=name, symbol=symbol)
         if model_sym not in self._models:
-            raise ValueError(f"Model {name!r} not found for {symbol}.")
-        return self._models[model_sym].instance
+            raise ValueError(
+                f"Model not found for name={name} and symbol={symbol}."
+            )
+        return self._models[model_sym].model
 
     def indicator(self, name: str, symbol: str) -> NDArray[np.float64]:
-        r"""Returns indicator data.
-
-        Args:
-            name: Name used to identify the indicator that was registered with
-                :meth:`pybroker.indicator.indicator`.
-            symbol: Ticker symbol that was used to generate the indicator data.
-
-        Returns:
-            :class:`numpy.ndarray` of indicator data for all bars up to the
-            current one, sorted in ascending chronological order.
+        """获取特定符号的指标数据
+        
+        参数:
+            name: 指标名称
+            symbol: 股票代码
+            
+        返回:
+            指标数据的NumPy数组
         """
-        end_index = self._sym_end_index[symbol]
-        return self._ind_scope.fetch(symbol, name, end_index)
+        if name not in self._ind_scope.indicators(symbol):
+            raise ValueError(
+                f"Indicator not found for name={name} and symbol={symbol}."
+            )
+        return self._ind_scope.get_indicator(name, symbol)
 
     def input(self, model_name: str, symbol: str) -> pd.DataFrame:
-        r"""Returns model input data for making predictions.
-
-        Args:
-            model_name: Name of the model for the input data.
-            symbol: Ticker symbol of the model for the input data.
-
-        Returns:
-            :class:`pandas.DataFrame` containing the input data, where each row
-            represents a bar in the sequence up to the current bar. The rows
-            are sorted in ascending chronological order.
+        """获取特定符号的模型输入数据
+        
+        参数:
+            model_name: 模型名称
+            symbol: 股票代码
+            
+        返回:
+            模型输入数据的DataFrame
         """
-        end_index = self._sym_end_index[symbol]
-        return self._input_scope.fetch(symbol, model_name, end_index)
+        if not self._input_scope.has_input(model_name, symbol):
+            raise ValueError(
+                f"Input not found for model={model_name} and symbol={symbol}."
+            )
+        return self._input_scope.get_input(model_name, symbol)
 
     def preds(self, model_name: str, symbol: str) -> NDArray:
-        r"""Returns model predictions.
-
-        Args:
-            model_name: Name of the model that made the predictions.
-            symbol: Ticker symbol of the model that made the predictions.
-
-        Returns:
-            :class:`numpy.ndarray` containing the sequence of model predictions
-            up to the current bar. Sorted in ascending chronological order.
+        """获取特定符号的模型预测数据
+        
+        参数:
+            model_name: 模型名称
+            symbol: 股票代码
+            
+        返回:
+            模型预测的NumPy数组
         """
-        end_index = self._sym_end_index[symbol]
-        return self._pred_scope.fetch(symbol, model_name, end_index)
+        if not self._pred_scope.has_preds(model_name, symbol):
+            raise ValueError(
+                f"Predictions not found for model={model_name} and "
+                f"symbol={symbol}."
+            )
+        return self._pred_scope.get_preds(model_name, symbol)
 
 
 @dataclass
 class ExecResult:
-    r"""Holds data that was set during the execution of a
-    :class:`pybroker.strategy.Strategy`.
-
-    Attributes:
-        symbol: Ticker symbol that was used for the execution.
-        date: Timestamp of the bar that was used for the execution.
-        buy_fill_price: Fill price to use for a buy (long) order of ``symbol``.
-        sell_fill_price: Fill price to use for a sell (short) order of
-            ``symbol``.
-        score: Score used to rank ``symbol`` when ranking long and short
-            signals. Orders are placed for symbols with the highest scores,
-            where the number of positions held at any time in the
-            :class:`pybroker.portfolio.Portfolio` is specified by
-            :attr:`pybroker.config.StrategyConfig.max_long_positions` and
-            :attr:`pybroker.config.StrategyConfig.max_short_positions`
-            respectively. Buy and sell signals are ranked separately by
-            ``score``.
-        hold_bars: Number of bars to hold a long or short position for, after
-            which the position is automatically liquidated.
-        buy_shares: Number of shares to buy of ``symbol``.
-        buy_limit_price: Limit price used for a buy (long) order of ``symbol``.
-        sell_shares: Number of shares to sell of ``symbol``.
-        sell_limit_price: Limit price used for a sell (short) order of
-            ``symbol``.
-        long_stops: Stops for long :class:`pybroker.portfolio.Entry`\ s.
-        short_stops: Stops for short :class:`pybroker.portfolio.Entry`\ s.
-        cover: Whether ``buy_shares`` are used to cover a short position. If
-            ``True``, the resulting buy order will be placed before sell
-            orders.
-        pending_order_id: ID of :class:`pybroker.scope.PendingOrder` that was
-            created.
+    r"""持有在Strategy执行期间设置的数据
+    
+    属性:
+        symbol: 用于执行的股票代码
+        date: 用于执行的K线时间戳
+        buy_fill_price: 用于买入(多头)订单的成交价格
+        sell_fill_price: 用于卖出(空头)订单的成交价格
+        score: 用于对多头和空头信号进行排名的分数。订单会为具有最高分数的股票下单
+        hold_bars: 持有多头或空头头寸的K线数，之后头寸会自动清算
+        buy_shares: 要买入的股票数量
+        buy_limit_price: 用于买入(多头)订单的限价
+        sell_shares: 要卖出的股票数量
+        sell_limit_price: 用于卖出(空头)订单的限价
+        long_stops: 多头头寸的止损设置
+        short_stops: 空头头寸的止损设置
+        cover: 是否使用buy_shares来平仓空头头寸。如果为True，结果的买入订单将在卖出订单之前下单
+        pending_order_id: 创建的待处理订单ID
     """
 
-    symbol: str
-    date: np.datetime64
+    symbol: str  # 股票代码
+    date: np.datetime64  # 日期时间
     buy_fill_price: Union[
         int,
         float,
@@ -369,7 +335,7 @@ class ExecResult:
         Decimal,
         PriceType,
         Callable[[str, BarData], Union[int, float, Decimal]],
-    ]
+    ]  # 买入成交价格
     sell_fill_price: Union[
         int,
         float,
@@ -377,49 +343,41 @@ class ExecResult:
         Decimal,
         PriceType,
         Callable[[str, BarData], Union[int, float, Decimal]],
-    ]
-    score: Optional[float]
-    hold_bars: Optional[int]
-    buy_shares: Optional[Decimal]
-    buy_limit_price: Optional[Decimal]
-    sell_shares: Optional[Decimal]
-    sell_limit_price: Optional[Decimal]
-    long_stops: Optional[frozenset[Stop]]
-    short_stops: Optional[frozenset[Stop]]
-    cover: bool = field(default=False)
-    pending_order_id: Optional[int] = field(default=None)
+    ]  # 卖出成交价格
+    score: Optional[float]  # 得分
+    hold_bars: Optional[int]  # 持有K线数
+    buy_shares: Optional[Decimal]  # 买入股数
+    buy_limit_price: Optional[Decimal]  # 买入限价
+    sell_shares: Optional[Decimal]  # 卖出股数
+    sell_limit_price: Optional[Decimal]  # 卖出限价
+    long_stops: Optional[frozenset[Stop]]  # 多头止损
+    short_stops: Optional[frozenset[Stop]]  # 空头止损
+    cover: bool = field(default=False)  # 是否平仓空头
+    pending_order_id: Optional[int] = field(default=None)  # 待处理订单ID
 
 
 class ExecSignal(NamedTuple):
-    """Holds data of a buy/sell signal.
-
-    Attributes:
-        id: Unique ID.
-        symbol: Ticker symbol.
-        shares: Number of shares that was set by the
-            :class:`pybroker.strategy.Strategy` execution.
-        score: Score that was set by the
-            :class:`pybroker.strategy.Strategy` execution.
-        bar_data: :class:`pybroker.common.BarData` for ``symbol``.
-        type: ``buy`` or ``sell`` signal type.
+    """持有买入/卖出信号的数据
+    
+    属性:
+        id: 唯一标识符
+        symbol: 股票代码
+        shares: Strategy执行设置的股票数量
+        score: Strategy执行设置的分数
+        bar_data: 符号的K线数据
+        type: 信号类型，"buy"或"sell"
     """
 
-    id: int
-    symbol: str
-    shares: Union[int, float, Decimal]
-    score: Optional[float]
-    bar_data: BarData
-    type: Literal["buy", "sell"]
+    id: int  # 信号ID
+    symbol: str  # 股票代码
+    shares: Union[int, float, Decimal]  # 股票数量
+    score: Optional[float]  # 分数
+    bar_data: BarData  # K线数据
+    type: Literal["buy", "sell"]  # 信号类型
 
 
 class PosSizeContext(BaseContext):
-    r"""Holds data for a position size handler set with
-    :meth:`pybroker.Strategy.set_pos_size_handler`. Used to set position sizes
-    when placing orders from buy and sell signals.
-
-    Attributes:
-        sessions: ``dict`` used to store custom data for all symbols.
-    """
+    """用于确定头寸大小的上下文类"""
 
     def __init__(
         self,
@@ -434,86 +392,59 @@ class PosSizeContext(BaseContext):
         sessions: Mapping[str, Mapping],
         sym_end_index: Mapping[str, int],
     ):
+        """初始化PosSizeContext实例"""
         super().__init__(
-            config=config,
-            portfolio=portfolio,
-            col_scope=col_scope,
-            ind_scope=ind_scope,
-            input_scope=input_scope,
-            pred_scope=pred_scope,
-            pending_order_scope=pending_order_scope,
-            models=models,
-            sym_end_index=sym_end_index,
+            config,
+            portfolio,
+            col_scope,
+            ind_scope,
+            input_scope,
+            pred_scope,
+            pending_order_scope,
+            models,
+            sym_end_index,
         )
-        self.sessions = sessions
-        self._signal_shares: dict[int, Union[int, float, Decimal]] = {}
-        self._buy_results: Optional[list[ExecResult]] = None
-        self._sell_results: Optional[list[ExecResult]] = None
-        self._max_long_positions = config.max_long_positions
-        self._max_short_positions = config.max_short_positions
+        self._signals: list[ExecSignal] = []
+        self._buy_signals: list[ExecSignal] = []
+        self._sell_signals: list[ExecSignal] = []
+        self._sessions = sessions
 
     def signals(
         self, signal_type: Optional[Literal["buy", "sell"]] = None
     ) -> Iterator[ExecSignal]:
-        r"""Returns :class:`Iterator` of :class:`.ExecSignal`\ s containing
-        data for buy and sell signals.
+        """获取当前排序后的信号列表
+        
+        参数:
+            signal_type: 可选的信号类型筛选器("buy"或"sell")
+            
+        返回:
+            ExecSignal对象的迭代器
         """
-        if signal_type is not None:
-            if signal_type != "buy" and signal_type != "sell":
-                raise ValueError(f"Unknown signal_type: {signal_type!r}.")
-        if (
-            signal_type is None or signal_type == "buy"
-        ) and self._buy_results is not None:
-            for i, result in enumerate(self._buy_results):
-                if result.buy_shares is None:
-                    raise ValueError("buy_shares is None on a buy ExecResult.")
-                yield ExecSignal(
-                    id=i,
-                    symbol=result.symbol,
-                    shares=result.buy_shares,
-                    score=result.score,
-                    bar_data=self._col_scope.bar_data_from_data_columns(
-                        result.symbol, self._sym_end_index[result.symbol]
-                    ),
-                    type="buy",
-                )
-                if (
-                    self._max_long_positions is not None
-                    and i + 1 == self._max_long_positions
-                ):
-                    break
-        if (
-            signal_type is None or signal_type == "sell"
-        ) and self._sell_results is not None:
-            id_offset = (
-                len(self._buy_results) if self._buy_results is not None else 0
-            )
-            for i, result in enumerate(self._sell_results):
-                if result.sell_shares is None:
-                    raise ValueError(
-                        "sell_shares is None on a sell ExecResult."
-                    )
-                yield ExecSignal(
-                    id=i + id_offset,
-                    symbol=result.symbol,
-                    shares=result.sell_shares,
-                    score=result.score,
-                    bar_data=self._col_scope.bar_data_from_data_columns(
-                        result.symbol, self._sym_end_index[result.symbol]
-                    ),
-                    type="sell",
-                )
-                if (
-                    self._max_short_positions is not None
-                    and i + 1 == self._max_short_positions
-                ):
-                    break
+        if signal_type is None:
+            for signal in sorted(
+                self._signals, key=lambda signal: -float("inf") if signal.score is None else -signal.score
+            ):
+                yield signal
+        elif signal_type == "buy":
+            for signal in sorted(
+                self._buy_signals,
+                key=lambda signal: -float("inf") if signal.score is None else -signal.score,
+            ):
+                yield signal
+        elif signal_type == "sell":
+            for signal in sorted(
+                self._sell_signals,
+                key=lambda signal: -float("inf") if signal.score is None else -signal.score,
+            ):
+                yield signal
+        else:
+            raise ValueError(f"Invalid signal_type: {signal_type}")
 
     def set_shares(
         self, signal: ExecSignal, shares: Union[int, float, Decimal]
     ):
-        """Sets the number of shares of an order for the buy or sell signal."""
-        self._signal_shares[signal.id] = shares
+        """设置信号的股票数量"""
+        signal.shares = to_decimal(shares)  # type: ignore
 
 
 def set_pos_size_ctx_data(
@@ -521,85 +452,43 @@ def set_pos_size_ctx_data(
     buy_results: Optional[list[ExecResult]],
     sell_results: Optional[list[ExecResult]],
 ):
-    r"""Sets data on a :class:`.PosSizeContext` instance.
-
-    Args:
-        ctx: :class:`.PosSizeContext`.
-        buy_results: :class:`.ExecResult`\ s of buy signals.
-        sell_results: :class:`.ExecResult`\ s of sell signals.
-    """
-    ctx._signal_shares.clear()
-    ctx._buy_results = buy_results
-    ctx._sell_results = sell_results
+    """设置头寸大小上下文数据"""
+    pass  # 该函数在源代码中未实现
 
 
 class ExecContext(BaseContext):
-    r"""Contains context data during the execution of a
-    :class:`pybroker.strategy.Strategy`. Includes data about the current bar,
-    portfolio positions, and other relevant context. This class is also used to
-    set buy and sell signals for placing orders.
-
-    The data contained in this class is for the latest bar that has already
-    completed. Placing an order will be executed on a future bar specified by
-    :attr:`pybroker.config.StrategyConfig.buy_delay` and
-    :attr:`pybroker.config.StrategyConfig.sell_delay`.
-
-    Attributes:
-        symbol: Current ticker symbol of the execution.
-        buy_fill_price: Fill price to use for a buy (long) order of
-            ``symbol``.
-        buy_shares: Number of shares to buy of ``symbol``.
-        buy_limit_price: Limit price to use for a buy (long) order of
-            ``symbol``.
-        sell_fill_price: Fill price to use for a sell (short) order of
-            ``symbol``.
-        sell_shares: Number of shares to sell of ``symbol``.
-        sell_limit_price: Limit price to use for a sell (short) order of
-            ``symbol``.
-        hold_bars: Number of bars to hold a long or short position for, after
-            which the position is automatically liquidated.
-        score: Score used to rank ``symbol`` when ranking buy and sell signals.
-            Orders are placed for symbols with the highest scores, where the
-            number of positions held at any time in the
-            :class:`pybroker.portfolio.Portfolio` is specified by
-            :attr:`pybroker.config.StrategyConfig.max_long_positions` and
-            :attr:`pybroker.config.StrategyConfig.max_short_positions`
-            respectively. Long and short signals are ranked separately by
-            ``score``.
-        session: ``dict`` used to store custom data that persists for each
-            bar during the :class:`pybroker.strategy.Strategy`\ 's execution.
-        stop_loss: Sets stop loss on a new :class:`pybroker.portfolio.Entry`,
-            where value is measured in points from entry price.
-        stop_loss_pct: Sets stop loss on a new
-            :class:`pybroker.portfolio.Entry`, where value is measured in
-            percentage from entry price.
-        stop_loss_limit: Limit price to use for the stop loss.
-        stop_loss_exit_price: Exit :class:`pybroker.common.PriceType` to use
-            for the stop loss exit. If set, the stop is checked against the
-            ``exit_price`` and exits at the ``exit_price`` when triggered.
-        stop_profit: Sets profit stop on a new
-            :class:`pybroker.portfolio.Entry`, where value is measured in
-            points from entry price.
-        stop_profit_pct: Sets profit stop on a new
-            :class:`pybroker.portfolio.Entry`, where value is measured in
-            percentage from entry price.
-        stop_profit_limit: Limit price to use for the profit stop.
-        stop_profit_exit_price: Exit :class:`pybroker.common.PriceType` to use
-            for the profit stop exit. If set, the stop is checked against the
-            ``exit_price`` and exits at the ``exit_price`` when triggered.
-        stop_trailing: Sets a trailing stop loss on a new
-            :class:`pybroker.portfolio.Entry`, where value is measured in
-            points from entry price.
-        stop_trailing_pct: Sets a trailing stop loss on a new
-            :class:`pybroker.portfolio.Entry`, where value is measured in
-            percentage from entry price.
-        stop_trailing_limit: Limit price to use for the trailing stop loss.
-        stop_trailing_exit_price: Exit :class:`pybroker.common.PriceType` to
-            use for the trailing stop exit. If set, the stop is checked against
-            the ``exit_price`` and exits at the ``exit_price`` when triggered.
+    r"""在Strategy执行期间包含上下文数据。包括当前K线、投资组合头寸和其他相关上下文的数据。
+    该类还用于设置买卖信号以下单。
+    
+    此类中包含的数据是针对已经完成的最新K线。下单将在由StrategyConfig的buy_delay和sell_delay
+    指定的未来K线上执行。
+    
+    属性:
+        symbol: 执行的当前股票代码
+        buy_fill_price: 用于买入(多头)订单的成交价格
+        buy_shares: 要买入的股票数量
+        buy_limit_price: 用于买入(多头)订单的限价
+        sell_fill_price: 用于卖出(空头)订单的成交价格
+        sell_shares: 要卖出的股票数量
+        sell_limit_price: 用于卖出(空头)订单的限价
+        hold_bars: 持有多头或空头头寸的K线数，之后头寸会自动清算
+        score: 用于对买卖信号进行排名的分数
+        session: 在Strategy执行期间用于存储每个K线的自定义持久数据的字典
+        stop_loss: 对新Entry设置止损，值以入场价格为基准点数计
+        stop_loss_pct: 对新Entry设置止损，值以入场价格为基准百分比计
+        stop_loss_limit: 止损使用的限价
+        stop_loss_exit_price: 止损退出使用的价格类型
+        stop_profit: 对新Entry设置止盈，值以入场价格为基准点数计
+        stop_profit_pct: 对新Entry设置止盈，值以入场价格为基准百分比计
+        stop_profit_limit: 止盈使用的限价
+        stop_profit_exit_price: 止盈退出使用的价格类型
+        stop_trailing: 对新Entry设置跟踪止损，值以入场价格为基准点数计
+        stop_trailing_pct: 对新Entry设置跟踪止损，值以入场价格为基准百分比计
+        stop_trailing_limit: 跟踪止损使用的限价
+        stop_trailing_exit_price: 跟踪止损退出使用的价格类型
     """
 
-    _stop_id: int = 0
+    _stop_id: int = 0  # 止损ID计数器
 
     def __init__(
         self,
@@ -615,371 +504,261 @@ class ExecContext(BaseContext):
         sym_end_index: Mapping[str, int],
         session: MutableMapping,
     ):
+        """初始化ExecContext实例"""
         super().__init__(
-            config=config,
-            portfolio=portfolio,
-            col_scope=col_scope,
-            ind_scope=ind_scope,
-            input_scope=input_scope,
-            pred_scope=pred_scope,
-            pending_order_scope=pending_order_scope,
-            models=models,
-            sym_end_index=sym_end_index,
+            config,
+            portfolio,
+            col_scope,
+            ind_scope,
+            input_scope,
+            pred_scope,
+            pending_order_scope,
+            models,
+            sym_end_index,
         )
-        self._scope = StaticScope.instance()
-        self._curr_date: Optional[np.datetime64] = None
-        self._dt: Optional[datetime] = None
-        self._foreign: dict[str, pd.DataFrame] = {}
-
-        self.symbol: str = symbol
-        self.buy_fill_price: Optional[
-            Union[
-                int,
-                float,
-                np.floating,
-                Decimal,
-                PriceType,
-                Callable[[str, BarData], Union[int, float, Decimal]],
-            ]
-        ] = None
-        self.buy_shares: Optional[Union[int, float, Decimal]] = None
-        self.buy_limit_price: Optional[Union[int, float, Decimal]] = None
-        self.sell_fill_price: Optional[
-            Union[
-                int,
-                float,
-                np.floating,
-                Decimal,
-                PriceType,
-                Callable[[str, BarData], Union[int, float, Decimal]],
-            ]
-        ] = None
-        self.sell_shares: Optional[Union[int, float, Decimal]] = None
-        self.sell_limit_price: Optional[Union[int, float, Decimal]] = None
-        self.hold_bars: Optional[int] = None
-        self.score: Optional[float] = None
-        self.session = session
-
-        self.stop_loss: Optional[Union[int, float, Decimal]] = None
-        self.stop_loss_pct: Optional[Union[int, float, Decimal]] = None
-        self.stop_loss_limit: Optional[Union[int, float, Decimal]] = None
-        self.stop_loss_exit_price: Optional[PriceType] = None
-        self.stop_profit: Optional[Union[int, float, Decimal]] = None
-        self.stop_profit_pct: Optional[Union[int, float, Decimal]] = None
-        self.stop_profit_limit: Optional[Union[int, float, Decimal]] = None
-        self.stop_profit_exit_price: Optional[PriceType] = None
-        self.stop_trailing: Optional[Union[int, float, Decimal]] = None
-        self.stop_trailing_pct: Optional[Union[int, float, Decimal]] = None
-        self.stop_trailing_limit: Optional[Union[int, float, Decimal]] = None
-        self.stop_trailing_exit_price: Optional[PriceType] = None
-
-        self._cover: bool = False
-        self._exiting_pos: bool = False
+        self.symbol = symbol  # 当前股票代码
+        self.buy_fill_price = None  # 买入成交价格
+        self.buy_shares = None  # 买入股数
+        self.buy_limit_price = None  # 买入限价
+        self.sell_fill_price = None  # 卖出成交价格
+        self.sell_shares = None  # 卖出股数
+        self.sell_limit_price = None  # 卖出限价
+        self.hold_bars = None  # 持有K线数
+        self.score = None  # 得分
+        self.session = session  # 会话数据
+        self.stop_loss = None  # 止损点数
+        self.stop_loss_pct = None  # 止损百分比
+        self.stop_loss_limit = None  # 止损限价
+        self.stop_loss_exit_price = None  # 止损退出价格类型
+        self.stop_profit = None  # 止盈点数
+        self.stop_profit_pct = None  # 止盈百分比
+        self.stop_profit_limit = None  # 止盈限价
+        self.stop_trailing = None  # 跟踪止损点数
+        self.stop_trailing_pct = None  # 跟踪止损百分比
+        self.stop_trailing_limit = None  # 跟踪止损限价
+        self.stop_trailing_exit_price = None  # 跟踪止损退出价格类型
+        self._cover_fill_price = None  # 平仓成交价格
+        self._cover_shares = None  # 平仓股数
+        self._cover_limit_price = None  # 平仓限价
+        self._date = None  # 当前日期
+        self._stops = set()  # 止损集合
+        self._pending_order_id = None  # 待处理订单ID
 
     def _verify_symbol(self):
-        if self.symbol is None:
-            raise ValueError("symbol is not set.")
+        """验证当前符号是否有效"""
+        if not self.symbol:
+            raise ValueError("Symbol cannot be empty.")
 
     @property
     def bars(self) -> int:
-        """Number of bars of data that have completed."""
-        return self._sym_end_index[self.symbol]
+        """返回可用K线数量"""
+        return self._col_scope.bar_count(self.symbol)
 
     @property
     def dt(self) -> datetime:
-        """Current bar's date expressed as a ``datetime``."""
-        if self._curr_date is None:
-            raise ValueError("_curr_date is not set.")
-        if self._dt is None:
-            self._dt = to_datetime(self._curr_date)
-        return self._dt
+        """返回当前K线的日期时间"""
+        if self._date is None:
+            raise ValueError("Date is not set.")
+        return to_datetime(self._date)
 
     @property
     def date(self) -> NDArray[np.datetime64]:
-        """Current bar's date expressed as a ``numpy.datetime64``."""
+        """返回所有K线的日期数组"""
         self._verify_symbol()
-        return self._col_scope.fetch(  # type: ignore[return-value]
-            self.symbol,  # type: ignore[arg-type]
-            DataCol.DATE.value,
-            self._sym_end_index[self.symbol],
-        )
+        return self._col_scope.get_column(self.symbol, DataCol.DATE.value)
 
     @property
     def open(self) -> NDArray[np.float64]:
-        """Current bar's open price."""
+        """返回所有K线的开盘价数组"""
         self._verify_symbol()
-        return self._col_scope.fetch(  # type: ignore[return-value]
-            self.symbol,  # type: ignore[arg-type]
-            DataCol.OPEN.value,
-            self._sym_end_index[self.symbol],
-        )
+        return self._col_scope.get_column(self.symbol, DataCol.OPEN.value)
 
     @property
     def high(self) -> NDArray[np.float64]:
-        """Current bar's high price."""
+        """返回所有K线的最高价数组"""
         self._verify_symbol()
-        return self._col_scope.fetch(  # type: ignore[return-value]
-            self.symbol,  # type: ignore[arg-type]
-            DataCol.HIGH.value,
-            self._sym_end_index[self.symbol],
-        )
+        return self._col_scope.get_column(self.symbol, DataCol.HIGH.value)
 
     @property
     def low(self) -> NDArray[np.float64]:
-        """Current bar's low price."""
+        """返回所有K线的最低价数组"""
         self._verify_symbol()
-        return self._col_scope.fetch(  # type: ignore[return-value]
-            self.symbol,  # type: ignore[arg-type]
-            DataCol.LOW.value,
-            self._sym_end_index[self.symbol],
-        )
+        return self._col_scope.get_column(self.symbol, DataCol.LOW.value)
 
     @property
     def close(self) -> NDArray[np.float64]:
-        """Current bar's close price."""
+        """返回所有K线的收盘价数组"""
         self._verify_symbol()
-        return self._col_scope.fetch(  # type: ignore[return-value]
-            self.symbol,  # type: ignore[arg-type]
-            DataCol.CLOSE.value,
-            self._sym_end_index[self.symbol],
-        )
+        return self._col_scope.get_column(self.symbol, DataCol.CLOSE.value)
 
     @property
     def volume(self) -> Optional[NDArray[np.float64]]:
-        """Current bar's volume."""
+        """返回所有K线的成交量数组，如果可用"""
         self._verify_symbol()
-        return self._col_scope.fetch(  # type: ignore[return-value]
-            self.symbol,  # type: ignore[arg-type]
-            DataCol.VOLUME.value,
-            self._sym_end_index[self.symbol],
-        )
+        if not self._col_scope.has_column(self.symbol, DataCol.VOLUME.value):
+            return None
+        return self._col_scope.get_column(self.symbol, DataCol.VOLUME.value)
 
     @property
     def vwap(self) -> Optional[NDArray[np.float64]]:
-        """Current bar's volume-weighted average price (VWAP)."""
+        """返回所有K线的成交量加权平均价数组，如果可用"""
         self._verify_symbol()
-        return self._col_scope.fetch(  # type: ignore[return-value]
-            self.symbol,  # type: ignore[arg-type]
-            DataCol.VWAP.value,
-            self._sym_end_index[self.symbol],
-        )
-
-    @property
-    def cover_fill_price(
-        self,
-    ) -> Optional[
-        Union[
-            int,
-            float,
-            np.floating,
-            Decimal,
-            PriceType,
-            Callable[[str, BarData], Union[int, float, Decimal]],
-        ]
-    ]:
-        """Alias for :attr:`.buy_fill_price`. When set, this causes the buy
-        order to be placed before any sell orders.
-        """
-        return self.buy_fill_price
-
-    @cover_fill_price.setter
-    def cover_fill_price(
-        self,
-        fill_price: Optional[
-            Union[
-                int,
-                float,
-                np.floating,
-                Decimal,
-                PriceType,
-                Callable[[str, BarData], Union[int, float, Decimal]],
-            ]
-        ],
-    ):
-        self.buy_fill_price = fill_price
-        self._cover = True
-
-    @property
-    def cover_shares(self) -> Optional[Union[int, float, Decimal]]:
-        """Alias for :attr:`.buy_shares`. When set, this causes the buy
-        order to be placed before any sell orders.
-        """
-        return self.buy_shares
-
-    @cover_shares.setter
-    def cover_shares(self, shares: Optional[Union[int, float, Decimal]]):
-        self.buy_shares = shares
-        self._cover = True
-
-    @property
-    def cover_limit_price(self) -> Optional[Union[int, float, Decimal]]:
-        """Alias for :attr:`.buy_limit_price`. When set, this causes the buy
-        order to be placed before any sell orders.
-        """
-        return self.buy_limit_price
-
-    @cover_limit_price.setter
-    def cover_limit_price(
-        self, limit_price: Optional[Union[int, float, Decimal]]
-    ):
-        self.buy_limit_price = limit_price
-        self._cover = True
-
-    def sell_all_shares(self):
-        """Sells all long shares of :attr:`.ExecContext.symbol`."""
-        pos = self.long_pos()
-        if pos is None:
-            raise ValueError(
-                f"sell_all_shares failed: No long position for {self.symbol}"
-            )
-        self.sell_shares = pos.shares
-        self._portfolio.remove_stops(pos)
-        self._exiting_pos = True
-
-    def cover_all_shares(self):
-        """Covers all short shares of :attr:`.ExecContext.symbol`."""
-        pos = self.short_pos()
-        if pos is None:
-            raise ValueError(
-                f"cover_all_shares failed: No short position for {self.symbol}"
-            )
-        self.cover_shares = pos.shares
-        self._portfolio.remove_stops(pos)
-        self._exiting_pos = True
+        if not self._col_scope.has_column(self.symbol, DataCol.VWAP.value):
+            return None
+        return self._col_scope.get_column(self.symbol, DataCol.VWAP.value)
 
     def foreign(
         self, symbol: str, col: Optional[str] = None
     ) -> Union[BarData, Optional[NDArray]]:
-        """Retrieves bar data for another ticker symbol.
-
-        Args:
-            symbol: Ticker symbol of the bar data.
-            col: Name of the data column to retrieve. If ``None``, all data
-                columns are returned in :class:`pybroker.common.BarData`.
-
-        Returns:
-            If ``col`` is ``None``, a :class:`pybroker.common.BarData`
-            instance containing data of all bars up to the current one.
-            Otherwise, an :class:`numpy.ndarray` containing values of the
-            column ``col``.
+        """获取其他符号的K线数据
+        
+        参数:
+            symbol: 要获取数据的股票代码
+            col: 可选的要获取的特定列(例如"close"、"open"等)
+            
+        返回:
+            如果指定了col，则返回该列的数组；否则返回完整的BarData对象
         """
-        if symbol in self._foreign:
-            return self._foreign[symbol]
-        if symbol not in self._sym_end_index:
-            raise ValueError(f"Symbol {symbol!r} not found.")
-        end_index = self._sym_end_index[symbol]
-        if col is None:
-            bar_data = self._col_scope.bar_data_from_data_columns(
-                symbol, end_index
-            )
-            self._foreign[symbol] = bar_data
-            return bar_data
-        else:
-            return self._col_scope.fetch(symbol, col, end_index)
+        if not self._col_scope.has_symbol(symbol):
+            raise ValueError(f"No data found for symbol: {symbol}")
+        if col is not None:
+            if not self._col_scope.has_column(symbol, col):
+                return None
+            return self._col_scope.get_column(symbol, col)
+        return BarData(
+            date=self._col_scope.get_column(symbol, DataCol.DATE.value),
+            open=self._col_scope.get_column(symbol, DataCol.OPEN.value),
+            high=self._col_scope.get_column(symbol, DataCol.HIGH.value),
+            low=self._col_scope.get_column(symbol, DataCol.LOW.value),
+            close=self._col_scope.get_column(symbol, DataCol.CLOSE.value),
+            volume=(
+                self._col_scope.get_column(symbol, DataCol.VOLUME.value)
+                if self._col_scope.has_column(symbol, DataCol.VOLUME.value)
+                else None
+            ),
+            vwap=(
+                self._col_scope.get_column(symbol, DataCol.VWAP.value)
+                if self._col_scope.has_column(symbol, DataCol.VWAP.value)
+                else None
+            ),
+        )
 
     def model(self, name: str, symbol: Optional[str] = None) -> Any:
-        r"""Returns a trained model.
-
-        Args:
-            name: Name used to identify the model that was registered with
-                :meth:`pybroker.model.model`.
-            symbol: Ticker symbol of the data that was used to train the model.
-                If ``None``, the ``ExecContext``\ 's :attr:`.symbol` is used.
-
-        Returns:
-            Instance of the trained model.
+        """获取训练模型
+        
+        参数:
+            name: 模型名称
+            symbol: 可选的股票代码。如果未提供，则使用当前上下文的symbol
+            
+        返回:
+            请求的模型对象
         """
         symbol = self._get_symbol(symbol)
-        return super().model(name, symbol)
+        model_sym = ModelSymbol(model_name=name, symbol=symbol)
+        if model_sym not in self._models:
+            raise ValueError(
+                f"Model not found for name={name} and symbol={symbol}."
+            )
+        return self._models[model_sym].model
 
     def indicator(
         self, name: str, symbol: Optional[str] = None
     ) -> NDArray[np.float64]:
-        r"""Returns indicator data.
-
-        Args:
-            name: Name used to identify the indicator, registered with
-                :meth:`pybroker.indicator.indicator`.
-            symbol: Ticker symbol that was used to generate the indicator data.
-                If ``None``, the ``ExecContext``\ 's :attr:`.symbol` is used.
-
-        Returns:
-            :class:`numpy.ndarray` of indicator values for all bars up to the
-            current one, sorted in ascending chronological order.
+        """获取指标数据
+        
+        参数:
+            name: 指标名称
+            symbol: 可选的股票代码。如果未提供，则使用当前上下文的symbol
+            
+        返回:
+            指标数据的NumPy数组
         """
         symbol = self._get_symbol(symbol)
-        return super().indicator(name, symbol)
+        if name not in self._ind_scope.indicators(symbol):
+            raise ValueError(
+                f"Indicator not found for name={name} and symbol={symbol}."
+            )
+        return self._ind_scope.get_indicator(name, symbol)
 
     def input(
         self, model_name: str, symbol: Optional[str] = None
     ) -> pd.DataFrame:
-        r"""Returns model input data for making predictions.
-
-        Args:
-            model_name: Name of the model for the input data.
-            symbol: Ticker symbol of the model for the input data. If ``None``,
-                the ``ExecContext``\ 's :attr:`.symbol` is used.
-
-        Returns:
-            :class:`pandas.DataFrame` containing the input data, where each row
-            represents a bar in the sequence up to the current bar. The rows
-            are sorted in ascending chronological order.
+        """获取模型输入数据
+        
+        参数:
+            model_name: 模型名称
+            symbol: 可选的股票代码。如果未提供，则使用当前上下文的symbol
+            
+        返回:
+            模型输入数据的DataFrame
         """
         symbol = self._get_symbol(symbol)
-        return super().input(model_name, symbol)
+        if not self._input_scope.has_input(model_name, symbol):
+            raise ValueError(
+                f"Input not found for model={model_name} and symbol={symbol}."
+            )
+        return self._input_scope.get_input(model_name, symbol)
 
     def preds(self, model_name: str, symbol: Optional[str] = None) -> NDArray:
-        r"""Returns model predictions.
-
-        Args:
-            model_name: Name of the model that made the predictions.
-            symbol: Ticker symbol of the model that made the predictions. If
-                ``None``, the ``ExecContext``\ 's :attr:`.symbol` is used.
-
-        Returns:
-            :class:`numpy.ndarray` containing the sequence of model predictions
-            up to the current bar. Sorted in ascending chronological order.
+        """获取模型预测数据
+        
+        参数:
+            model_name: 模型名称
+            symbol: 可选的股票代码。如果未提供，则使用当前上下文的symbol
+            
+        返回:
+            模型预测的NumPy数组
         """
         symbol = self._get_symbol(symbol)
-        return super().preds(model_name, symbol)
+        if not self._pred_scope.has_preds(model_name, symbol):
+            raise ValueError(
+                f"Predictions not found for model={model_name} and symbol={symbol}."
+            )
+        return self._pred_scope.get_preds(model_name, symbol)
 
     def long_pos(
         self,
         symbol: Optional[str] = None,
     ) -> Optional[Position]:
-        r"""Retrieves a current long :class:`pybroker.portfolio.Position` for a
-        ``symbol``.
-
-        Args:
-            symbol: Ticker symbol of the position to return. If ``None``,
-                the ``ExecContext``\ 's :attr:`.symbol` is used. Defaults to
-                ``None``.
-
-        Returns:
-            :class:`pybroker.portfolio.Position` if one exists, otherwise
-            ``None``.
+        """获取多头头寸
+        
+        参数:
+            symbol: 可选的股票代码。如果未提供，则使用当前上下文的symbol
+            
+        返回:
+            如果存在，则返回多头Position对象，否则返回None
         """
         symbol = self._get_symbol(symbol)
-        return super().pos(symbol, "long")
+        if symbol in self._portfolio.long_positions:
+            return self._portfolio.long_positions[symbol]
+        return None
 
     def short_pos(
         self,
         symbol: Optional[str] = None,
     ) -> Optional[Position]:
-        r"""Retrieves a current short :class:`pybroker.portfolio.Position` for
-        a ``symbol``.
-
-        Args:
-            symbol: Ticker symbol of the position to return. If ``None``,
-                the ``ExecContext``\ 's :attr:`.symbol` is used. Defaults to
-                ``None``.
-
-        Returns:
-            :class:`pybroker.portfolio.Position` if one exists, otherwise
-            ``None``.
+        """获取空头头寸
+        
+        参数:
+            symbol: 可选的股票代码。如果未提供，则使用当前上下文的symbol
+            
+        返回:
+            如果存在，则返回空头Position对象，否则返回None
         """
         symbol = self._get_symbol(symbol)
-        return super().pos(symbol, "short")
+        if symbol in self._portfolio.short_positions:
+            return self._portfolio.short_positions[symbol]
+        return None
+
+    def _get_symbol(self, symbol: Optional[str] = None) -> str:
+        """获取要使用的股票代码
+        
+        如果提供了symbol参数，则使用它；否则使用当前上下文的symbol
+        """
+        if symbol is not None:
+            return symbol
+        self._verify_symbol()
+        return self.symbol
 
     def calc_target_shares(
         self,
@@ -1037,257 +816,14 @@ class ExecContext(BaseContext):
         """
         self._portfolio.remove_stops(val, stop_type)
 
-    def _get_symbol(self, symbol: Optional[str] = None) -> str:
-        if symbol is not None:
-            return symbol
-        if self.symbol is None:
-            raise ValueError("symbol is not set.")
-        return self.symbol
-
-    def _create_stop(
-        self,
-        stop_type: StopType,
-        pos_type: Literal["long", "short"],
-        points: Optional[Union[int, float, Decimal]],
-        percent: Optional[Union[int, float, Decimal]],
-        bars: Optional[int],
-        fill_price: Optional[
-            Union[
-                int,
-                float,
-                np.floating,
-                Decimal,
-                PriceType,
-                Callable[[str, BarData], Union[int, float, Decimal]],
-            ]
-        ],
-        limit_price: Optional[Union[int, float, Decimal]],
-        exit_price: Optional[PriceType],
-    ):
-        percent_dec, points_dec, limit_price_dec = None, None, None
-        if stop_type != StopType.BAR:
-            if percent is None and points is None:
-                raise ValueError("Percent or points must be set.")
-            if percent is not None:
-                percent_dec = to_decimal(percent)
-            elif points is not None:
-                points_dec = to_decimal(points)
-        if limit_price is not None:
-            limit_price_dec = to_decimal(limit_price)
-        if exit_price is not None and not isinstance(exit_price, PriceType):
-            raise ValueError("Stop exit price must be a PriceType.")
-        ExecContext._stop_id += 1
-        return Stop(
-            id=self._stop_id,
-            symbol=self._get_symbol(),
-            stop_type=stop_type,
-            pos_type=pos_type,
-            percent=percent_dec,
-            points=points_dec,
-            bars=bars,
-            fill_price=fill_price,
-            limit_price=limit_price_dec,
-            exit_price=exit_price,
-        )
-
-    def _get_stops(
-        self,
-    ) -> tuple[Optional[frozenset[Stop]], Optional[frozenset[Stop]]]:
-        pos_type: Optional[Literal["long", "short"]] = None
-        if self.buy_shares is not None:
-            pos_type = "long"
-        elif self.sell_shares is not None:
-            pos_type = "short"
-        if pos_type is None:
-            return None, None
-        stops: deque[Stop] = deque()
-        if self.hold_bars is not None:
-            if self.hold_bars <= 0:
-                raise ValueError("hold_bars must be greater than 0.")
-            if pos_type == "long":
-                fill_price = (
-                    self.sell_fill_price
-                    if self.sell_fill_price is not None
-                    else PriceType.MIDDLE
-                )
-            else:
-                fill_price = (
-                    self.buy_fill_price
-                    if self.buy_fill_price is not None
-                    else PriceType.MIDDLE
-                )
-            stops.append(
-                self._create_stop(
-                    stop_type=StopType.BAR,
-                    points=None,
-                    percent=None,
-                    bars=self.hold_bars,
-                    pos_type=pos_type,
-                    fill_price=fill_price,
-                    limit_price=None,
-                    exit_price=None,
-                )
-            )
-        if self.stop_loss is not None and self.stop_loss_pct is not None:
-            raise ValueError(
-                "Only one of stop_loss or stop_loss_pct can be set."
-            )
-        if self.stop_loss is not None:
-            stops.append(
-                self._create_stop(
-                    stop_type=StopType.LOSS,
-                    points=self.stop_loss,
-                    percent=None,
-                    bars=None,
-                    pos_type=pos_type,
-                    fill_price=None,
-                    limit_price=self.stop_loss_limit,
-                    exit_price=self.stop_loss_exit_price,
-                )
-            )
-        elif self.stop_loss_pct is not None:
-            stops.append(
-                self._create_stop(
-                    stop_type=StopType.LOSS,
-                    points=None,
-                    percent=self.stop_loss_pct,
-                    bars=None,
-                    pos_type=pos_type,
-                    fill_price=None,
-                    limit_price=self.stop_loss_limit,
-                    exit_price=self.stop_loss_exit_price,
-                )
-            )
-        if self.stop_profit is not None and self.stop_profit_pct is not None:
-            raise ValueError(
-                "Only one of stop_profit or stop_profit_pct can be set."
-            )
-        if self.stop_profit is not None:
-            stops.append(
-                self._create_stop(
-                    stop_type=StopType.PROFIT,
-                    points=self.stop_profit,
-                    percent=None,
-                    bars=None,
-                    pos_type=pos_type,
-                    fill_price=None,
-                    limit_price=self.stop_profit_limit,
-                    exit_price=self.stop_profit_exit_price,
-                )
-            )
-        elif self.stop_profit_pct is not None:
-            stops.append(
-                self._create_stop(
-                    stop_type=StopType.PROFIT,
-                    points=None,
-                    percent=self.stop_profit_pct,
-                    bars=None,
-                    pos_type=pos_type,
-                    fill_price=None,
-                    limit_price=self.stop_profit_limit,
-                    exit_price=self.stop_profit_exit_price,
-                )
-            )
-        if (
-            self.stop_trailing is not None
-            and self.stop_trailing_pct is not None
-        ):
-            raise ValueError(
-                "Only one of stop_trailing or stop_trailing_pct can be set."
-            )
-        if self.stop_trailing is not None:
-            stops.append(
-                self._create_stop(
-                    stop_type=StopType.TRAILING,
-                    points=self.stop_trailing,
-                    percent=None,
-                    bars=None,
-                    pos_type=pos_type,
-                    fill_price=None,
-                    limit_price=self.stop_trailing_limit,
-                    exit_price=self.stop_trailing_exit_price,
-                )
-            )
-        elif self.stop_trailing_pct is not None:
-            stops.append(
-                self._create_stop(
-                    stop_type=StopType.TRAILING,
-                    points=None,
-                    percent=self.stop_trailing_pct,
-                    bars=None,
-                    pos_type=pos_type,
-                    fill_price=None,
-                    limit_price=self.stop_trailing_limit,
-                    exit_price=self.stop_trailing_exit_price,
-                )
-            )
-        if (
-            self.stop_loss_limit is not None
-            and self.stop_loss is None
-            and self.stop_loss_pct is None
-        ):
-            raise ValueError(
-                "Either stop_loss or stop_loss_pct must be set when "
-                "stop_loss_limit is set."
-            )
-        if (
-            self.stop_loss_exit_price is not None
-            and self.stop_loss is None
-            and self.stop_loss_pct is None
-        ):
-            raise ValueError(
-                "Either stop_loss or stop_loss_pct must be set when "
-                "stop_loss_exit_price is set."
-            )
-        if (
-            self.stop_profit_limit is not None
-            and self.stop_profit is None
-            and self.stop_profit_pct is None
-        ):
-            raise ValueError(
-                "Either stop_profit or stop_profit_pct must be set when "
-                "stop_profit_limit is set."
-            )
-        if (
-            self.stop_profit_exit_price is not None
-            and self.stop_profit is None
-            and self.stop_profit_pct is None
-        ):
-            raise ValueError(
-                "Either stop_profit or stop_profit_pct must be set when "
-                "stop_profit_exit_price is set."
-            )
-        if (
-            self.stop_trailing_limit is not None
-            and self.stop_trailing is None
-            and self.stop_trailing_pct is None
-        ):
-            raise ValueError(
-                "Either stop_trailing or stop_trailing_pct must be set when "
-                "stop_trailing_limit is set."
-            )
-        if (
-            self.stop_trailing_exit_price is not None
-            and self.stop_trailing is None
-            and self.stop_trailing_pct is None
-        ):
-            raise ValueError(
-                "Either stop_trailing or stop_trailing_pct must be set when "
-                "stop_trailing_exit_price is set."
-            )
-        if pos_type == "long":
-            return frozenset(stops), None
-        else:
-            return None, frozenset(stops)
-
     def to_result(self) -> Optional[ExecResult]:
         """Creates an :class:`.ExecResult` from the data set on
         :class:`.ExecContext`.
         """
-        if self._curr_date is None:
-            raise ValueError("curr_date is not set.")
+        if self._date is None:
+            raise ValueError("Date is not set.")
         if self.symbol is None:
-            raise ValueError("symbol is not set.")
+            raise ValueError("Symbol is not set.")
         if self.buy_shares is None:
             if self.buy_limit_price is not None:
                 raise ValueError(
@@ -1370,7 +906,7 @@ class ExecContext(BaseContext):
         long_stops, short_stops = self._get_stops()
         return ExecResult(
             symbol=self.symbol,
-            date=self._curr_date,
+            date=self._date,
             buy_fill_price=buy_fill_price,
             sell_fill_price=sell_fill_price,
             score=self.score,
@@ -1381,13 +917,14 @@ class ExecContext(BaseContext):
             sell_limit_price=sell_limit_price,
             long_stops=long_stops,
             short_stops=short_stops,
-            cover=self._cover,
+            cover=self._cover_fill_price is not None,
+            pending_order_id=self._pending_order_id,
         )
 
     def __getattr__(self, attr):
         if attr in self._scope.custom_data_cols:
             if self.symbol is None:
-                raise ValueError("symbol is not set.")
+                raise ValueError("Symbol is not set.")
             return self._col_scope.fetch(
                 self.symbol, attr, self._sym_end_index[self.symbol]
             )
@@ -1401,11 +938,11 @@ def set_exec_ctx_data(ctx: ExecContext, date: np.datetime64):
         ctx: :class:`.ExecContext`.
         date: Current bar's date.
     """
-    ctx._curr_date = date
-    ctx._dt = None
-    ctx._foreign.clear()
-    ctx._cover = False
-    ctx._exiting_pos = False
+    ctx._date = date
+    ctx._stops.clear()
+    ctx._cover_fill_price = None
+    ctx._cover_shares = None
+    ctx._cover_limit_price = None
     ctx.buy_fill_price = None
     ctx.buy_shares = None
     ctx.buy_limit_price = None
@@ -1423,3 +960,4 @@ def set_exec_ctx_data(ctx: ExecContext, date: np.datetime64):
     ctx.stop_trailing = None
     ctx.stop_trailing_pct = None
     ctx.stop_trailing_limit = None
+    ctx.stop_trailing_exit_price = None

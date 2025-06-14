@@ -42,22 +42,32 @@ _EMPTY_PARAM: Final = object()
 
 class StaticScope:
     """A static registry of data and object references.
+    
+    静态数据和对象引用的注册表。
 
     Attributes:
         logger: :class:`pybroker.log.Logger`
         data_source_cache: :class:`diskcache.Cache` that stores data retrieved
             from :class:`pybroker.data.DataSource`.
+            存储从数据源检索的数据的缓存。
         data_source_cache_ns: Namespace set for  :attr:`.data_source_cache`.
+            数据源缓存的命名空间。
         indicator_cache: :class:`diskcache.Cache` that stores
             :class:`pybroker.indicator.Indicator` data.
+            存储指标数据的缓存。
         indicator_cache_ns: Namespace set for :attr:`.indicator_cache`.
+            指标缓存的命名空间。
         model_cache: :class:`diskcache.Cache` that stores trained models.
+            存储训练好的模型的缓存。
         model_cache_ns: Namespace set for :attr:`.model_cache`.
+            模型缓存的命名空间。
         default_data_cols: Default data columns in :class:`pandas.DataFrame`
             retrieved from a :class:`pybroker.data.DataSource`.
+            从数据源检索的DataFrame中的默认数据列。
         custom_data_cols: User-defined data columns in
             :class:`pandas.DataFrame` retrieved from a
             :class:`pybroker.data.DataSource`.
+            用户定义的数据列。
     """
 
     __instance = None
@@ -88,18 +98,26 @@ class StaticScope:
         self._params: dict[str, Any] = {}
 
     def set_indicator(self, indicator):
-        """Stores :class:`pybroker.indicator.Indicator` in static scope."""
+        """Stores :class:`pybroker.indicator.Indicator` in static scope.
+        
+        在静态作用域中存储指标。
+        """
         self._indicators[indicator.name] = indicator
 
     def has_indicator(self, name: str) -> bool:
         """Whether :class:`pybroker.indicator.Indicator` is stored in static
         scope.
+        
+        检查指定名称的指标是否存储在静态作用域中。
         """
         return name in self._indicators
 
     def get_indicator(self, name: str):
         """Retrieves a :class:`pybroker.indicator.Indicator` from static
-        scope."""
+        scope.
+        
+        从静态作用域中检索指定名称的指标。
+        """
         if not self.has_indicator(name):
             raise ValueError(f"Indicator {name!r} does not exist.")
         return self._indicators[name]
@@ -108,29 +126,41 @@ class StaticScope:
         """Returns a ``tuple[str]`` of all
         :class:`pybroker.indicator.Indicator` names that are registered with
         :class:`pybroker.model.ModelSource` having ``model_name``.
+        
+        返回注册到指定模型名称的所有指标名称的元组。
         """
         return self._model_sources[model_name].indicators
 
     def set_model_source(self, source):
-        """Stores :class:`pybroker.model.ModelSource` in static scope."""
+        """Stores :class:`pybroker.model.ModelSource` in static scope.
+        
+        在静态作用域中存储模型源。
+        """
         self._model_sources[source.name] = source
 
     def has_model_source(self, name: str) -> bool:
         """Whether :class:`pybroker.model.ModelSource` is stored in static
         scope.
+        
+        检查指定名称的模型源是否存储在静态作用域中。
         """
         return name in self._model_sources
 
     def get_model_source(self, name: str):
         """Retrieves a :class:`pybroker.model.ModelSource` from static
         scope.
+        
+        从静态作用域中检索指定名称的模型源。
         """
         if not self.has_model_source(name):
             raise ValueError(f"ModelSource {name!r} does not exist.")
         return self._model_sources[name]
 
     def register_custom_cols(self, names: Union[str, Iterable[str]], *args):
-        """Registers user-defined column names."""
+        """Registers user-defined column names.
+        
+        注册用户自定义的列名。
+        """
         self._verify_unfrozen_cols()
         if isinstance(names, str):
             names = (names, *args)
@@ -140,7 +170,10 @@ class StaticScope:
         self.custom_data_cols.update(names)
 
     def unregister_custom_cols(self, names: Union[str, Iterable[str]], *args):
-        """Unregisters user-defined column names."""
+        """Unregisters user-defined column names.
+        
+        注销用户自定义的列名。
+        """
         self._verify_unfrozen_cols()
         if isinstance(names, str):
             names = (names, *args)
@@ -150,7 +183,10 @@ class StaticScope:
 
     @property
     def all_data_cols(self) -> frozenset[str]:
-        """All registered data column names."""
+        """All registered data column names.
+        
+        所有已注册的数据列名。
+        """
         return self.default_data_cols | self.custom_data_cols
 
     def _verify_unfrozen_cols(self):
@@ -158,19 +194,27 @@ class StaticScope:
             raise ValueError("Cannot modify columns when strategy is running.")
 
     def freeze_data_cols(self):
-        """Prevents additional data columns from being registered."""
+        """Prevents additional data columns from being registered.
+        
+        防止注册额外的数据列，通常在策略运行时调用。
+        """
         self._cols_frozen = True
 
     def unfreeze_data_cols(self):
         """Allows additional data columns to be registered if
         :func:`pybroker.scope.StaticScope.freeze_data_cols` was called.
+        
+        如果之前调用了freeze_data_cols，允许重新注册额外的数据列。
         """
         self._cols_frozen = False
 
     def param(
         self, name: str, value: Optional[Any] = _EMPTY_PARAM
     ) -> Optional[Any]:
-        """Get or set a global parameter."""
+        """Get or set a global parameter.
+        
+        获取或设置一个全局参数。
+        """
         if value is _EMPTY_PARAM:
             return self._params.get(name, None)
         self._params[name] = value
@@ -178,52 +222,79 @@ class StaticScope:
 
     @classmethod
     def instance(cls) -> "StaticScope":
-        """Returns singleton instance."""
+        """Returns singleton instance.
+        
+        返回SingleScope的单例实例。
+        """
         if cls.__instance is None:
             cls.__instance = StaticScope()
         return cls.__instance
 
 
 def disable_logging():
-    """Disables event logging."""
+    """Disables event logging.
+    
+    禁用事件日志记录。
+    """
     StaticScope.instance().logger.disable()
 
 
 def enable_logging():
-    """Enables event logging."""
+    """Enables event logging.
+    
+    启用事件日志记录。
+    """
     StaticScope.instance().logger.enable()
 
 
 def disable_progress_bar():
-    """Disables logging a progress bar."""
+    """Disables logging a progress bar.
+    
+    禁用进度条显示。
+    """
     StaticScope.instance().logger.disable_progress_bar()
 
 
 def enable_progress_bar():
-    """Enables logging a progress bar."""
+    """Enables logging a progress bar.
+    
+    启用进度条显示。
+    """
     StaticScope.instance().logger.enable_progress_bar()
 
 
 def register_columns(names: Union[str, Iterable[str]], *args):
-    """Registers ``names`` of user-defined data columns."""
+    """Registers ``names`` of user-defined data columns.
+    
+    注册用户自定义的数据列名。
+    """
     StaticScope.instance().register_custom_cols(names, *args)
 
 
 def unregister_columns(names: Union[str, Iterable[str]], *args):
-    """Unregisters ``names`` of user-defined data columns."""
+    """Unregisters ``names`` of user-defined data columns.
+    
+    注销用户自定义的数据列名。
+    """
     StaticScope.instance().unregister_custom_cols(names, *args)
 
 
 def param(name: str, value: Optional[Any] = _EMPTY_PARAM) -> Optional[Any]:
-    """Get or set a global parameter."""
+    """Get or set a global parameter.
+    
+    获取或设置一个全局参数。
+    """
     return StaticScope.instance().param(name, value)
 
 
 class ColumnScope:
     """Caches and retrieves column data queried from :class:`pandas.DataFrame`.
+    
+    缓存和检索从DataFrame查询的列数据。
 
     Args:
         df: :class:`pandas.DataFrame` containing the column data.
+            包含列数据的DataFrame。
     """
 
     def __init__(self, df: pd.DataFrame):
@@ -240,16 +311,22 @@ class ColumnScope:
         end_index: Optional[int] = None,
     ) -> dict[str, Optional[NDArray]]:
         r"""Fetches a ``dict`` of column data for ``symbol``.
+        
+        获取指定交易品种的列数据字典。
 
         Args:
             symbol: Ticker symbol to query.
+                要查询的交易品种代码。
             names: Names of columns to query.
+                要查询的列名。
             end_index: Truncates column values (exclusive). If ``None``, then
                 column values are not truncated.
+                列值截断位置（不包含）。如果为None，则不截断列值。
 
         Returns:
             ``dict`` mapping column names to :class:`numpy.ndarray`\ s of
             column values.
+            将列名映射到列值数组的字典。
         """
         result: dict[str, Optional[NDArray]] = {}
         if not names:
@@ -281,16 +358,22 @@ class ColumnScope:
         self, symbol: str, name: str, end_index: Optional[int] = None
     ) -> Optional[NDArray]:
         """Fetches a :class:`numpy.ndarray` of column data for ``symbol``.
+        
+        获取指定交易品种的列数据数组。
 
         Args:
             symbol: Ticker symbol to query.
+                要查询的交易品种代码。
             name: Name of column to query.
+                要查询的列名。
             end_index: Truncates column values (exclusive). If ``None``, then
                 column values are not truncated.
+                列值截断位置（不包含）。如果为None，则不截断列值。
 
         Returns:
             :class:`numpy.ndarray` of column data for every bar until
             ``end_index`` (when specified).
+            包含直到end_index的每个柱的列数据的数组。
         """
         result = self.fetch_dict(symbol, (name,), end_index)
         return result.get(name, None)
@@ -301,11 +384,15 @@ class ColumnScope:
         """Returns a new :class:`pybroker.common.BarData` instance containing
         column data of default and custom data columns registered with
         :class:`.StaticScope`.
+        
+        返回一个新的BarData实例，包含在StaticScope中注册的默认和自定义数据列的列数据。
 
         Args:
             symbol: Ticker symbol to query.
+                要查询的交易品种代码。
             end_index: Truncates column values (exclusive). If ``None``, then
                 column values are not truncated.
+                列值截断位置（不包含）。如果为None，则不截断列值。
         """
         static_scope = StaticScope.instance()
         default_col_data = self.fetch_dict(
@@ -322,13 +409,17 @@ class ColumnScope:
 
 class IndicatorScope:
     """Caches and retrieves :class:`pybroker.indicator.Indicator` data.
+    
+    缓存和检索指标数据。
 
     Args:
         indicator_data: :class:`Mapping` of
             :class:`pybroker.common.IndicatorSymbol` pairs to ``pandas.Series``
             of :class:`pybroker.indicator.Indicator` values.
+            指标符号对到指标值Series的映射。
         filter_dates: Filters :class:`pybroker.indicator.Indicator` data on
             :class:`Sequence` of dates.
+            用于过滤指标数据的日期序列。
     """
 
     def __init__(
@@ -344,17 +435,23 @@ class IndicatorScope:
         self, symbol: str, name: str, end_index: Optional[int] = None
     ) -> NDArray[np.float64]:
         """Fetches :class:`pybroker.indicator.Indicator` data.
+        
+        获取指标数据。
 
         Args:
             symbol: Ticker symbol to query.
+                要查询的交易品种代码。
             name: Name of :class:`pybroker.indicator.Indicator` to query.
+                要查询的指标名称。
             end_index: Truncates the array of
                 :class:`pybroker.indicator.Indicator` data returned
                 (exclusive). If ``None``, then indicator data is not truncated.
+                返回的指标数据数组的截断位置（不包含）。如果为None，则不截断指标数据。
 
         Returns:
             :class:`numpy.ndarray` of :class:`pybroker.indicator.Indicator`
             data for every bar until ``end_index`` (when specified).
+            包含直到end_index的每个柱的指标数据的数组。
         """
         ind_sym = IndicatorSymbol(name, symbol)
         if ind_sym in self._sym_inds:
@@ -369,13 +466,18 @@ class IndicatorScope:
 
 class ModelInputScope:
     r"""Caches and retrieves model input data.
+    
+    缓存和检索模型输入数据。
 
     Args:
         col_scope: :class:`.ColumnScope`.
+            列作用域对象。
         ind_scope: :class:`.IndicatorScope`.
+            指标作用域对象。
         models: :class:`Mapping` of
             :class:`pybroker.common.ModelSymbol` pairs to
             :class:`pybroker.common.TrainedModel`\ s.
+            模型符号对到训练好的模型的映射。
     """
 
     def __init__(
@@ -394,18 +496,24 @@ class ModelInputScope:
         self, symbol: str, name: str, end_index: Optional[int] = None
     ) -> pd.DataFrame:
         """Fetches model input data.
+        
+        获取模型输入数据。
 
         Args:
             symbol: Ticker symbol to query.
+                要查询的交易品种代码。
             name: Name of :class:`pybroker.model.ModelSource` to query input
                 data.
+                要查询输入数据的模型源名称。
             end_index: Truncates the array of model input data returned
                 (exclusive). If ``None``, then model input data is not
                 truncated.
+                返回的模型输入数据的截断位置（不包含）。如果为None，则不截断模型输入数据。
 
         Returns:
             :class:`numpy.ndarray` of model input data for every bar until
             ``end_index`` (when specified).
+            包含直到end_index的每个柱的模型输入数据的DataFrame。
         """
         model_sym = ModelSymbol(name, symbol)
         if model_sym in self._sym_inputs:
@@ -441,12 +549,16 @@ class ModelInputScope:
 
 class PredictionScope:
     r"""Caches and retrieves model predictions.
+    
+    缓存和检索模型预测。
 
     Args:
         models: :class:`Mapping` of
             :class:`pybroker.common.ModelSymbol` pairs to
             :class:`pybroker.common.TrainedModel`\ s.
+            模型符号对到训练好的模型的映射。
         input_scope: :class:`.ModelInputScope`.
+            模型输入作用域对象。
     """
 
     def __init__(
@@ -462,17 +574,23 @@ class PredictionScope:
         self, symbol: str, name: str, end_index: Optional[int] = None
     ) -> NDArray:
         """Fetches model predictions.
+        
+        获取模型预测。
 
         Args:
             symbol: Ticker symbol to query.
+                要查询的交易品种代码。
             name: Name of :class:`pybroker.model.ModelSource` that made the
                 predictions.
+                做出预测的模型源名称。
             end_index: Truncates the array of predictions returned (exclusive).
                 If ``None``, then predictions are not truncated.
+                返回的预测数组的截断位置（不包含）。如果为None，则不截断预测。
 
         Returns:
             :class:`numpy.ndarray` of model predictions for every bar until
             ``end_index`` (when specified).
+            包含直到end_index的每个柱的模型预测的数组。
         """
         model_sym = ModelSymbol(name, symbol)
         if model_sym in self._sym_preds:
@@ -506,7 +624,10 @@ class PredictionScope:
 
 
 class PriceScope:
-    """Retrieves most recent prices."""
+    """Retrieves most recent prices.
+    
+    检索最近的价格。
+    """
 
     def __init__(
         self,
@@ -530,6 +651,10 @@ class PriceScope:
             Callable[[str, BarData], Union[int, float, Decimal]],
         ],
     ) -> Decimal:
+        """获取特定价格类型的最近价格并转换为Decimal类型返回。
+        
+        根据提供的价格类型(如开盘价、收盘价等)或自定义价格计算函数，获取最新的价格数据。
+        """
         end_index = self._sym_end_index[symbol]
         price_type = type(price)
         fill_price = None
@@ -620,16 +745,26 @@ class PriceScope:
 
 class PendingOrder(NamedTuple):
     """Holds data for a pending order.
+    
+    保存挂单数据。
 
     Attributes:
         id: Unique ID.
+            唯一标识符。
         type: Type of order, either ``buy`` or ``sell``.
+            订单类型，"buy"或"sell"。
         symbol: Ticker symbol of the order.
+            订单的交易品种代码。
         created: Date the order was created.
+            订单创建日期。
         exec_date: Date the order will be executed.
+            订单执行日期。
         shares: Number of shares to be bought or sold.
+            要买入或卖出的股数。
         limit_price: Limit price to use for the order.
+            订单的限价。
         fill_price: Price that the order will be filled at.
+            订单将被成交的价格。
     """
 
     id: int
@@ -650,7 +785,10 @@ class PendingOrder(NamedTuple):
 
 
 class PendingOrderScope:
-    r"""Stores :class:`.PendingOrder`\ s"""
+    r"""Stores :class:`.PendingOrder`\ s
+    
+    存储挂单对象的容器。
+    """
 
     _order_id: int = 0
 
@@ -661,6 +799,8 @@ class PendingOrderScope:
     def contains(self, order_id: int) -> bool:
         """Returns whether a :class:`.PendingOrder` exists with
         ``order_id``.
+        
+        检查是否存在指定订单ID的挂单。
         """
         return order_id in self._orders
 
@@ -682,18 +822,28 @@ class PendingOrderScope:
         ],
     ) -> int:
         """Creates a :class:`.PendingOrder`.
+        
+        创建一个挂单对象。
 
         Args:
             type: Type of order, either ``buy`` or ``sell``.
+                订单类型，"buy"或"sell"。
             symbol: Ticker symbol of the order.
+                订单的交易品种代码。
             created: Date the order was created.
+                订单创建日期。
             exec_date: Date the order will be executed.
+                订单执行日期。
             shares: Number of shares to be bought or sold.
+                要买入或卖出的股数。
             limit_price: Limit price to use for the order.
+                订单的限价。
             fill_price: Price that the order will be filled at.
+                订单将被成交的价格。
 
         Returns:
             ID of the :class:`.PendingOrder`.
+            挂单对象的ID。
         """
         self._order_id += 1
         order = PendingOrder(
@@ -711,7 +861,10 @@ class PendingOrderScope:
         return order.id
 
     def remove(self, order_id: int) -> bool:
-        """Removes a :class:`.PendingOrder` with ``order_id```."""
+        """Removes a :class:`.PendingOrder` with ``order_id```.
+        
+        移除指定订单ID的挂单。
+        """
         if order_id in self._orders:
             order = self._orders[order_id]
             del self._orders[order_id]
@@ -724,7 +877,10 @@ class PendingOrderScope:
         return False
 
     def remove_all(self, symbol: Optional[str] = None):
-        r"""Removes all :class:`.PendingOrder`\ s."""
+        r"""Removes all :class:`.PendingOrder`\ s.
+        
+        移除所有挂单，如果指定了交易品种，则只移除该交易品种的挂单。
+        """
         if symbol is None:
             cancel_ids = tuple(self._orders.keys())
             for order_id in cancel_ids:
@@ -735,7 +891,10 @@ class PendingOrderScope:
                 self.remove(order_id)
 
     def orders(self, symbol: Optional[str] = None) -> Iterable[PendingOrder]:
-        r"""Returns an :class:`Iterable` of :class:`.PendingOrder`\ s."""
+        r"""Returns an :class:`Iterable` of :class:`.PendingOrder`\ s.
+        
+        返回挂单对象的可迭代集合，如果指定了交易品种，则只返回该交易品种的挂单。
+        """
         if symbol is None:
             return self._orders.values()
         else:
@@ -752,6 +911,11 @@ def get_signals(
 ) -> dict[str, pd.DataFrame]:
     r"""Retrieves dictionary of :class:`pandas.DataFrame`\ s
     containing bar data, indicator data, and model predictions for each symbol.
+    
+    检索包含每个交易品种的柱数据、指标数据和模型预测的DataFrame字典。
+    
+    这个函数收集交易信号数据，将原始价格数据、技术指标和模型预测整合在一起，
+    便于后续的交易策略使用。
     """
     static_scope = StaticScope.instance()
     cols = static_scope.all_data_cols

@@ -1,4 +1,4 @@
-"""Contains implementation of evaluation metrics."""
+"""Contains implementation of evaluation metrics."""  # 包含评估指标的实现
 
 """Copyright (C) 2023 Edward West. All rights reserved.
 
@@ -19,23 +19,23 @@ from typing import Callable, NamedTuple, Optional
 
 
 class BootConfIntervals(NamedTuple):
-    """Holds confidence intervals of bootstrap tests.
-
-    Attributes:
-        low_2p5: Lower bound of 97.5% confidence interval.
-        high_2p5: Upper bound of 97.5% confidence interval.
-        low_5: Lower bound of 95% confidence interval.
-        high_5: Upper bound of 95% confidence interval.
-        low_10: Lower bound of 90% confidence interval.
-        high_10: Upper bound of 90% confidence interval.
+    """自举检验的置信区间
+    
+    属性:
+        low_2p5: 97.5%置信区间的下界
+        high_2p5: 97.5%置信区间的上界
+        low_5: 95%置信区间的下界
+        high_5: 95%置信区间的上界
+        low_10: 90%置信区间的下界
+        high_10: 90%置信区间的上界
     """
 
-    low_2p5: float
-    high_2p5: float
-    low_5: float
-    high_5: float
-    low_10: float
-    high_10: float
+    low_2p5: float  # 97.5%置信区间下界
+    high_2p5: float  # 97.5%置信区间上界
+    low_5: float  # 95%置信区间下界
+    high_5: float  # 95%置信区间上界
+    low_10: float  # 90%置信区间下界
+    high_10: float  # 90%置信区间上界
 
 
 @njit
@@ -45,21 +45,16 @@ def bca_boot_conf(
     n_boot: int,
     fn: Callable[[NDArray[np.float64]], float],
 ) -> BootConfIntervals:
-    """Computes confidence intervals for a user-defined parameter using the
-    `bias corrected and accelerated (BCa) bootstrap method.
-    <https://blogs.sas.com/content/iml/2017/07/12/bootstrap-bca-interval.html>`_
-
-    Args:
-        x: :class:`numpy.ndarray` containing the data for the randomized
-            bootstrap sampling.
-        n: Number of elements in each random bootstrap sample.
-        n_boot: Number of random bootstrap samples to use.
-        fn: :class:`Callable` for computing the parameter used for the
-            confidence intervals.
-
-    Returns:
-        :class:`.BootConfIntervals` containing the computed confidence
-        intervals.
+    """使用偏差校正和加速(BCa)自举方法计算用户定义参数的置信区间
+    
+    参数:
+        x: 用于随机自举采样的数据数组
+        n: 每个随机自举样本中的元素数量
+        n_boot: 要使用的随机自举样本数量
+        fn: 用于计算置信区间参数的可调用函数
+        
+    返回:
+        包含计算的置信区间的BootConfIntervals对象
     """
 
     if n <= 0:
@@ -139,6 +134,92 @@ def bca_boot_conf(
     k = clamp(k)
     high_10 = boot[n_boot - 1 - k]
     return BootConfIntervals(low_2p5, high_2p5, low_5, high_5, low_10, high_10)
+
+
+@njit
+def profit_factor(
+    changes: NDArray[np.float64], use_log: bool = False
+) -> np.floating:
+    """计算盈利因子，即总盈利与总亏损的比率
+    
+    参数:
+        changes: 每个K线与前一个K线之间的差异数组
+        use_log: 是否对盈利因子进行对数转换。默认为False
+    """
+    wins = changes[changes > 0]  # 获取所有正向变化
+    losses = changes[changes < 0]  # 获取所有负向变化
+    if not len(wins) and not len(losses):
+        return np.float64(0)
+    numer = denom = 1.0e-10  # 避免除以零
+    numer += np.sum(wins)  # 总盈利
+    denom -= np.sum(losses)  # 总亏损的绝对值
+    if use_log:
+        return np.log(numer / denom)  # 返回对数盈利因子
+    else:
+        return np.divide(numer, denom)  # 返回盈利因子
+
+
+@njit
+def log_profit_factor(changes: NDArray[np.float64]) -> np.floating:
+    """计算对数转换的盈利因子，即总盈利与总亏损的比率
+    
+    参数:
+        changes: 每个K线与前一个K线之间的差异数组
+    """
+    return profit_factor(changes, use_log=True)
+
+
+@njit
+def sharpe_ratio(
+    changes: NDArray[np.float64],
+    obs: Optional[int] = None,
+    downside_only: bool = False,
+) -> np.floating:
+    """计算夏普比率
+    
+    参数:
+        changes: 每个K线与前一个K线之间的差异数组
+        obs: 用于年化夏普比率的观察次数。例如，值为252将用于年化每日回报
+        downside_only: 是否仅考虑下行风险（只计算负向变化的标准差）
+    """
+    std_changes = changes[changes < 0] if downside_only else changes
+    if not len(std_changes):
+        return np.float64(0)
+    std = np.std(std_changes)  # 计算标准差
+    if std == 0:
+        return np.float64(0)
+    sr = np.mean(changes) / std  # 计算夏普比率
+    if obs is not None:
+        sr *= np.sqrt(obs)  # 年化夏普比率
+    return sr
+
+
+def sortino_ratio(
+    changes: NDArray[np.float64], obs: Optional[int] = None
+) -> float:
+    """计算索提诺比率（只考虑下行风险的夏普比率变体）
+    
+    参数:
+        changes: 每个K线与前一个K线之间的差异数组
+        obs: 用于年化索提诺比率的观察次数
+    """
+    return sharpe_ratio(changes, obs, downside_only=True)
+
+
+def conf_profit_factor(
+    x: NDArray[np.float64], n: int, n_boot: int
+) -> BootConfIntervals:
+    """计算盈利因子的置信区间
+    
+    参数:
+        x: 用于随机自举采样的数据数组
+        n: 每个随机自举样本中的元素数量
+        n_boot: 要使用的随机自举样本数量
+        
+    返回:
+        包含盈利因子置信区间的BootConfIntervals对象
+    """
+    return bca_boot_conf(x, n, n_boot, log_profit_factor)
 
 
 @njit
@@ -662,160 +743,146 @@ def r_squared(values: NDArray[np.float64]) -> float:
 
 
 class BootstrapResult(NamedTuple):
-    """Contains results of bootstrap tests.
-
-    Attributes:
-        conf_intervals: :class:`pandas.DataFrame` containing confidence
-            intervals for :func:`.log_profit_factor` and :func:`.sharpe_ratio`.
-        drawdown_conf: :class:`pandas.DataFrame` containing upper bounds of
-            confidence intervals for maximum drawdown.
-        profit_factor: Contains profit factor confidence intervals.
-        sharpe: Contains Sharpe Ratio confidence intervals.
-        drawdown: Contains drawdown confidence intervals.
+    """包含自举检验的结果
+    
+    属性:
+        conf_intervals: 包含log_profit_factor和sharpe_ratio置信区间的DataFrame
+        drawdown_conf: 包含最大回撤置信区间上界的DataFrame
+        profit_factor: 包含盈利因子置信区间
+        sharpe: 包含夏普比率置信区间
+        drawdown: 包含回撤置信区间
     """
 
-    conf_intervals: pd.DataFrame
-    drawdown_conf: pd.DataFrame
-    profit_factor: BootConfIntervals
-    sharpe: BootConfIntervals
-    drawdown: DrawdownMetrics
+    conf_intervals: pd.DataFrame  # 置信区间DataFrame
+    drawdown_conf: pd.DataFrame  # 回撤置信区间DataFrame
+    profit_factor: BootConfIntervals  # 盈利因子置信区间
+    sharpe: BootConfIntervals  # 夏普比率置信区间
+    drawdown: DrawdownMetrics  # 回撤指标置信区间
 
 
-@dataclass(frozen=True)
+@dataclass
 class EvalMetrics:
-    """Contains metrics for evaluating a :class:`pybroker.strategy.Strategy`.
-
-    Attributes:
-        trade_count: Number of trades that were filled.
-        initial_market_value: Initial market value of the
-            :class:`pybroker.portfolio.Portfolio`.
-        end_market_value: Ending market value of the
-            :class:`pybroker.portfolio.Portfolio`.
-        total_pnl: Total realized profit and loss (PnL).
-        unrealized_pnl: Total unrealized profit and loss (PnL).
-        total_return_pct: Total realized return measured in percentage.
-        annual_return_pct: Annualized total realized return measured in
-            percentage.
-        total_profit: Total realized profit.
-        total_loss: Total realized loss.
-        total_fees: Total brokerage fees. See
-            :attr:`pybroker.config.StrategyConfig.fee_mode` for more info.
-        max_drawdown: Maximum drawdown, measured in cash.
-        max_drawdown_pct: Maximum drawdown, measured in percentage.
-        max_drawdown_date: Date of maximum drawdown.
-        win_rate: Win rate of trades.
-        loss_rate: Loss rate of trades.
-        winning_trades: Number of winning trades.
-        losing_trades: Number of losing trades.
-        avg_pnl: Average profit and loss (PnL) per trade, measured in cash.
-        avg_return_pct: Average return per trade, measured in percentage.
-        avg_trade_bars: Average number of bars per trade.
-        avg_profit: Average profit per trade, measured in cash.
-        avg_profit_pct: Average profit per trade, measured in percentage.
-        avg_winning_trade_bars: Average number of bars per winning trade.
-        avg_loss: Average loss per trade, measured in cash.
-        avg_loss_pct: Average loss per trade, measured in percentage.
-        avg_losing_trade_bars: Average number of bars per losing trade.
-        largest_win: Largest profit of a trade, measured in cash.
-        largest_win_pct: Largest profit of a trade, measured in percentage
-        largest_win_bars: Number of bars in the largest winning trade.
-        largest_loss: Largest loss of a trade, measured in cash.
-        largest_loss_pct: Largest loss of a trade, measured in percentage.
-        largest_loss_bars: Number of bars in the largest losing trade.
-        max_wins: Maximum number of consecutive winning trades.
-        max_losses: Maximum number of consecutive losing trades.
-        sharpe: `Sharpe Ratio <https://en.wikipedia.org/wiki/Sharpe_ratio>`_,
-            computed per bar.
-        sortino: `Sortino Ratio
-            <https://en.wikipedia.org/wiki/Sortino_ratio>`_, computed per bar.
-        calmar: Calmar Ratio, computed per bar.
-        profit_factor: Ratio of gross profit to gross loss, computed per bar.
-        ulcer_index: `Ulcer Index
-            <https://en.wikipedia.org/wiki/Ulcer_index>`_, computed per bar.
-        upi: `Ulcer Performance Index
-            <https://en.wikipedia.org/wiki/Ulcer_index>`_, computed per bar.
-        equity_r2: R^2 of the equity curve, computed per bar on market values
-            of portfolio.
-        std_error: Standard error, computed per bar on market values of
-            portfolio.
-        annual_std_error: Annualized standard error, computed per bar on market
-            values of portfolio.
-        annual_volatility_pct: Annualized volatility percentage, computed per
-            bar on market values of portfolio.
+    """包含用于评估Strategy的指标
+    
+    属性:
+        trade_count: 已成交的交易数量
+        initial_market_value: Portfolio的初始市场价值
+        end_market_value: Portfolio的结束市场价值
+        total_pnl: 总实现盈亏(PnL)
+        unrealized_pnl: 总未实现盈亏(PnL)
+        total_return_pct: 总实现回报率(百分比)
+        annual_return_pct: 年化总实现回报率(百分比)
+        total_profit: 总实现盈利
+        total_loss: 总实现亏损
+        total_fees: 总经纪费用
+        max_drawdown: 最大回撤(现金计量)
+        max_drawdown_pct: 最大回撤(百分比计量)
+        max_drawdown_date: 最大回撤日期
+        win_rate: 交易胜率
+        loss_rate: 交易亏损率
+        winning_trades: 盈利交易数量
+        losing_trades: 亏损交易数量
+        avg_pnl: 平均每笔交易盈亏(现金计量)
+        avg_return_pct: 平均每笔交易回报率(百分比)
+        avg_trade_bars: 平均每笔交易的K线数量
+        avg_profit: 平均每笔盈利交易的盈利(现金计量)
+        avg_profit_pct: 平均每笔盈利交易的盈利率(百分比)
+        avg_winning_trade_bars: 平均每笔盈利交易的K线数量
+        avg_loss: 平均每笔亏损交易的亏损(现金计量)
+        avg_loss_pct: 平均每笔亏损交易的亏损率(百分比)
+        avg_losing_trade_bars: 平均每笔亏损交易的K线数量
+        largest_win: 最大单笔交易盈利(现金计量)
+        largest_win_pct: 最大单笔交易盈利率(百分比)
+        largest_win_bars: 最大盈利交易的K线数量
+        largest_loss: 最大单笔交易亏损(现金计量)
+        largest_loss_pct: 最大单笔交易亏损率(百分比)
+        largest_loss_bars: 最大亏损交易的K线数量
+        max_wins: 最大连续盈利交易次数
+        max_losses: 最大连续亏损交易次数
+        sharpe: 夏普比率，按K线计算
+        sortino: 索提诺比率，按K线计算
+        calmar: 卡玛比率，按K线计算
+        profit_factor: 总盈利与总亏损的比率，按K线计算
+        ulcer_index: 溃疡指数，按K线计算
+        upi: 溃疡绩效指数，按K线计算
+        equity_r2: 权益曲线的R平方，按K线计算(基于投资组合的市场价值)
+        std_error: 标准误差，按K线计算(基于投资组合的市场价值)
+        annual_std_error: 年化标准误差，按K线计算(基于投资组合的市场价值)
+        annual_volatility_pct: 年化波动率百分比，按K线计算(基于投资组合的市场价值)
     """
 
-    trade_count: int = field(default=0)
-    initial_market_value: float = field(default=0)
-    end_market_value: float = field(default=0)
-    total_pnl: float = field(default=0)
-    unrealized_pnl: float = field(default=0)
-    total_return_pct: float = field(default=0)
-    annual_return_pct: Optional[float] = field(default=None)
-    total_profit: float = field(default=0)
-    total_loss: float = field(default=0)
-    total_fees: float = field(default=0)
-    max_drawdown: float = field(default=0)
-    max_drawdown_pct: float = field(default=0)
-    max_drawdown_date: Optional[datetime] = field(default=None)
-    win_rate: float = field(default=0)
-    loss_rate: float = field(default=0)
-    winning_trades: int = field(default=0)
-    losing_trades: int = field(default=0)
-    avg_pnl: float = field(default=0)
-    avg_return_pct: float = field(default=0)
-    avg_trade_bars: float = field(default=0)
-    avg_profit: float = field(default=0)
-    avg_profit_pct: float = field(default=0)
-    avg_winning_trade_bars: float = field(default=0)
-    avg_loss: float = field(default=0)
-    avg_loss_pct: float = field(default=0)
-    avg_losing_trade_bars: float = field(default=0)
-    largest_win: float = field(default=0)
-    largest_win_pct: float = field(default=0)
-    largest_win_bars: int = field(default=0)
-    largest_loss: float = field(default=0)
-    largest_loss_pct: float = field(default=0)
-    largest_loss_bars: int = field(default=0)
-    max_wins: int = field(default=0)
-    max_losses: int = field(default=0)
-    sharpe: float = field(default=0)
-    sortino: float = field(default=0)
-    calmar: Optional[float] = field(default=None)
-    profit_factor: float = field(default=0)
-    ulcer_index: float = field(default=0)
-    upi: float = field(default=0)
-    equity_r2: float = field(default=0)
-    std_error: float = field(default=0)
-    annual_std_error: Optional[float] = field(default=None)
-    annual_volatility_pct: Optional[float] = field(default=None)
+    trade_count: int = field(default=0)  # 交易数量
+    initial_market_value: float = field(default=0)  # 初始市场价值
+    end_market_value: float = field(default=0)  # 结束市场价值
+    total_pnl: float = field(default=0)  # 总盈亏
+    unrealized_pnl: float = field(default=0)  # 未实现盈亏
+    total_return_pct: float = field(default=0)  # 总回报率
+    annual_return_pct: Optional[float] = field(default=None)  # 年化回报率
+    total_profit: float = field(default=0)  # 总盈利
+    total_loss: float = field(default=0)  # 总亏损
+    total_fees: float = field(default=0)  # 总手续费
+    max_drawdown: float = field(default=0)  # 最大回撤(现金)
+    max_drawdown_pct: float = field(default=0)  # 最大回撤(百分比)
+    max_drawdown_date: Optional[datetime] = field(default=None)  # 最大回撤日期
+    win_rate: float = field(default=0)  # 胜率
+    loss_rate: float = field(default=0)  # 亏损率
+    winning_trades: int = field(default=0)  # 盈利交易数
+    losing_trades: int = field(default=0)  # 亏损交易数
+    avg_pnl: float = field(default=0)  # 平均盈亏
+    avg_return_pct: float = field(default=0)  # 平均回报率
+    avg_trade_bars: float = field(default=0)  # 平均交易K线数
+    avg_profit: float = field(default=0)  # 平均盈利
+    avg_profit_pct: float = field(default=0)  # 平均盈利率
+    avg_winning_trade_bars: float = field(default=0)  # 平均盈利交易K线数
+    avg_loss: float = field(default=0)  # 平均亏损
+    avg_loss_pct: float = field(default=0)  # 平均亏损率
+    avg_losing_trade_bars: float = field(default=0)  # 平均亏损交易K线数
+    largest_win: float = field(default=0)  # 最大盈利
+    largest_win_pct: float = field(default=0)  # 最大盈利率
+    largest_win_bars: int = field(default=0)  # 最大盈利交易K线数
+    largest_loss: float = field(default=0)  # 最大亏损
+    largest_loss_pct: float = field(default=0)  # 最大亏损率
+    largest_loss_bars: int = field(default=0)  # 最大亏损交易K线数
+    max_wins: int = field(default=0)  # 最大连续盈利次数
+    max_losses: int = field(default=0)  # 最大连续亏损次数
+    sharpe: float = field(default=0)  # 夏普比率
+    sortino: float = field(default=0)  # 索提诺比率
+    calmar: Optional[float] = field(default=None)  # 卡玛比率
+    profit_factor: float = field(default=0)  # 盈利因子
+    ulcer_index: float = field(default=0)  # 溃疡指数
+    upi: float = field(default=0)  # 溃疡绩效指数
+    equity_r2: float = field(default=0)  # 权益曲线R方
+    std_error: float = field(default=0)  # 标准误差
+    annual_std_error: Optional[float] = field(default=None)  # 年化标准误差
+    annual_volatility_pct: Optional[float] = field(default=None)  # 年化波动率百分比
 
 
 class ConfInterval(NamedTuple):
-    """Confidence interval upper and low bounds.
-
-    Attributes:
-        name: Parameter name.
-        conf: Confidence interval percentage represented as a ``str``.
-        lower: Lower bound.
-        upper: Upper bound.
+    """置信区间上下界
+    
+    属性:
+        name: 参数名称
+        conf: 置信区间百分比(字符串表示)
+        lower: 下界
+        upper: 上界
     """
 
-    name: str
-    conf: str
-    lower: float
-    upper: float
+    name: str  # 参数名称
+    conf: str  # 置信水平
+    lower: float  # 下界
+    upper: float  # 上界
 
 
 class EvalResult(NamedTuple):
-    """Contains evaluation result.
-
-    Attributes:
-        metrics: Evaluation metrics.
-        bootstrap: Randomized bootstrap metrics.
+    """包含评估结果
+    
+    属性:
+        metrics: 评估指标
+        bootstrap: 随机自举指标
     """
 
-    metrics: EvalMetrics
-    bootstrap: Optional[BootstrapResult]
+    metrics: EvalMetrics  # 评估指标
+    bootstrap: Optional[BootstrapResult]  # 自举结果
 
 
 class _ConfsResult(NamedTuple):

@@ -1,4 +1,4 @@
-"""Contains model related functionality."""
+"""Contains model related functionality."""  # 包含模型相关功能
 
 """Copyright (C) 2023 Edward West. All rights reserved.
 
@@ -34,32 +34,25 @@ from typing import (
 
 
 class ModelSource:
-    r"""Base class of a model source. A model source provides a model instance
-    either by training one or by loading a pre-trained model.
-
-    Args:
-        name: Name of model.
-        indicator_names: :class:`Iterable` of names of
-            :class:`pybroker.indicator.Indicator`\ s used as features of the
-            model.
-        input_data_fn: :class:`Callable[[DataFrame], DataFrame]` for
-            preprocessing input data passed to the model when making
-            predictions. If set, ``input_data_fn`` will be called with a
-            :class:`pandas.DataFrame` containing all test data.
-        predict_fn: :class:`Callable[[Model, DataFrame], ndarray]` that
-            overrides calling the model's default ``predict`` function. If set,
-            ``predict_fn`` will be called with the trained model and a
-            :class:`pandas.DataFrame` containing all test data.
-        kwargs: ``dict`` of additional kwargs.
+    r"""模型源的基类。模型源通过训练或加载预训练模型来提供模型实例。
+    
+    参数:
+        name: 模型名称
+        indicator_names: 作为模型特征的指标名称的可迭代对象
+        input_data_fn: 用于预处理传递给模型进行预测的输入数据的可调用函数
+                      如果设置，input_data_fn将使用包含所有测试数据的DataFrame调用
+        predict_fn: 覆盖模型默认predict函数的可调用函数
+                   如果设置，predict_fn将使用训练好的模型和包含所有测试数据的DataFrame调用
+        kwargs: 额外参数的字典
     """
 
     def __init__(
         self,
-        name: str,
-        indicator_names: Iterable[str],
-        input_data_fn: Optional[Callable[[pd.DataFrame], pd.DataFrame]],
-        predict_fn: Optional[Callable[[Any, pd.DataFrame], NDArray]],
-        kwargs: dict[str, Any],
+        name: str,  # 模型名称
+        indicator_names: Iterable[str],  # 指标名称
+        input_data_fn: Optional[Callable[[pd.DataFrame], pd.DataFrame]],  # 输入数据预处理函数
+        predict_fn: Optional[Callable[[Any, pd.DataFrame], NDArray]],  # 预测函数
+        kwargs: dict[str, Any],  # 额外参数
     ):
         self.name = name
         self.indicators = tuple(indicator_names)
@@ -68,10 +61,10 @@ class ModelSource:
         self._kwargs = kwargs
 
     def prepare_input_data(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Prepares a :class:`pandas.DataFrame` of input data for passing to a
-        model when making predictions. If set, the ``input_data_fn``
-        is used to preprocess the input data. If ``False``, then indicator
-        columns in ``df`` are used as input features.
+        """准备用于模型预测的输入数据DataFrame
+        
+        如果设置了input_data_fn，则使用它预处理输入数据
+        如果未设置，则使用df中的指标列作为输入特征
         """
         if df.empty:
             return df
@@ -87,38 +80,26 @@ class ModelSource:
 
 
 class ModelLoader(ModelSource):
-    r"""Loads a pre-trained model.
-
-    Args:
-        name: Name of model.
-        load_fn: ``Callable[[symbol: str, train_start_date: datetime,
-            train_end_date: datetime, ...], DataFrame]`` used to load and
-            return a pre-trained model. This is expected to
-            return either a trained model instance, or a tuple containing a
-            trained model instance and a :class:`Iterable` of column names to
-            to be used as input for the model when making predictions.
-        indicator_names: :class:`Iterable` of names of
-            :class:`pybroker.indicator.Indicator`\ s used as features of the
-            model.
-        input_data_fn: :class:`Callable[[DataFrame], DataFrame]` for
-            preprocessing input data passed to the model when making
-            predictions. If set, ``input_data_fn`` will be called with a
-            :class:`pandas.DataFrame` containing all test data.
-        predict_fn: :class:`Callable[[Model, DataFrame], ndarray]` that
-            overrides calling the model's default ``predict`` function. If set,
-            ``predict_fn`` will be called with the trained model and a
-            :class:`pandas.DataFrame` containing all test data.
-        kwargs: ``dict`` of kwargs to pass to ``load_fn``.
+    r"""加载预训练模型的类
+    
+    参数:
+        name: 模型名称
+        load_fn: 用于加载并返回预训练模型的可调用函数
+                预期返回训练好的模型实例，或包含模型实例和用作输入的列名的元组
+        indicator_names: 作为模型特征的指标名称的可迭代对象
+        input_data_fn: 用于预处理传递给模型进行预测的输入数据的可调用函数
+        predict_fn: 覆盖模型默认predict函数的可调用函数
+        kwargs: 传递给load_fn的关键字参数字典
     """
 
     def __init__(
         self,
-        name: str,
-        load_fn: Callable[..., Union[Any, tuple[Any, Iterable[str]]]],
-        indicator_names: Iterable[str],
-        input_data_fn: Optional[Callable[[pd.DataFrame], pd.DataFrame]],
-        predict_fn: Optional[Callable[[Any, pd.DataFrame], NDArray]],
-        kwargs: dict[str, Any],
+        name: str,  # 模型名称
+        load_fn: Callable[..., Union[Any, tuple[Any, Iterable[str]]]],  # 加载函数
+        indicator_names: Iterable[str],  # 指标名称
+        input_data_fn: Optional[Callable[[pd.DataFrame], pd.DataFrame]],  # 输入数据预处理函数
+        predict_fn: Optional[Callable[[Any, pd.DataFrame], NDArray]],  # 预测函数
+        kwargs: dict[str, Any],  # 额外参数
     ):
         super().__init__(
             name, indicator_names, input_data_fn, predict_fn, kwargs
@@ -128,15 +109,15 @@ class ModelLoader(ModelSource):
     def __call__(
         self, symbol: str, train_start_date: datetime, train_end_date: datetime
     ) -> Union[Any, tuple[Any, Iterable[str]]]:
-        """Loads pre-trained model.
-
-        Args:
-            symbol: Ticker symbol for loading the pre-trained model.
-            train_start_date: Start date of training window.
-            train_end_date: End date of training window.
-
-        Returns:
-            Pre-trained model.
+        """加载预训练模型
+        
+        参数:
+            symbol: 加载预训练模型的股票代码
+            train_start_date: 训练窗口的开始日期
+            train_end_date: 训练窗口的结束日期
+            
+        返回:
+            预训练模型
         """
         return self._load_fn(symbol, train_start_date, train_end_date)
 
@@ -148,38 +129,26 @@ class ModelLoader(ModelSource):
 
 
 class ModelTrainer(ModelSource):
-    r"""Trains a model.
-
-    Args:
-        name: Name of model.
-        train_fn: ``Callable[[symbol: str, train_data: DataFrame,
-            test_data: DataFrame, ...], DataFrame]`` used to train and return a
-            model. This is expected to return either a trained model instance,
-            or a tuple containing a trained model instance and a
-            :class:`Iterable` of column names to to be used as input for the
-            model when making predictions.
-        indicator_names: :class:`Iterable` of names of
-            :class:`pybroker.indicator.Indicator`\ s used as features of the
-            model.
-        input_data_fn: :class:`Callable[[DataFrame], DataFrame]` for
-            preprocessing input data passed to the model when making
-            predictions. If set, ``input_data_fn`` will be called with a
-            :class:`pandas.DataFrame` containing all test data.
-        predict_fn: :class:`Callable[[Model, DataFrame], ndarray]` that
-            overrides calling the model's default ``predict`` function. If set,
-            ``predict_fn`` will be called with the trained model and a
-            :class:`pandas.DataFrame` containing all test data.
-        kwargs: ``dict`` of kwargs to pass to ``train_fn``.
+    r"""训练模型的类
+    
+    参数:
+        name: 模型名称
+        train_fn: 用于训练并返回模型的可调用函数
+                 预期返回训练好的模型实例，或包含模型实例和用作输入的列名的元组
+        indicator_names: 作为模型特征的指标名称的可迭代对象
+        input_data_fn: 用于预处理传递给模型进行预测的输入数据的可调用函数
+        predict_fn: 覆盖模型默认predict函数的可调用函数
+        kwargs: 传递给train_fn的关键字参数字典
     """
 
     def __init__(
         self,
-        name: str,
-        train_fn: Callable[..., Union[Any, tuple[Any, Iterable[str]]]],
-        indicator_names: Iterable[str],
-        input_data_fn: Optional[Callable[[pd.DataFrame], pd.DataFrame]],
-        predict_fn: Optional[Callable[[Any, pd.DataFrame], NDArray]],
-        kwargs: dict[str, Any],
+        name: str,  # 模型名称
+        train_fn: Callable[..., Union[Any, tuple[Any, Iterable[str]]]],  # 训练函数
+        indicator_names: Iterable[str],  # 指标名称
+        input_data_fn: Optional[Callable[[pd.DataFrame], pd.DataFrame]],  # 输入数据预处理函数
+        predict_fn: Optional[Callable[[Any, pd.DataFrame], NDArray]],  # 预测函数
+        kwargs: dict[str, Any],  # 额外参数
     ):
         super().__init__(
             name, indicator_names, input_data_fn, predict_fn, kwargs
@@ -189,15 +158,15 @@ class ModelTrainer(ModelSource):
     def __call__(
         self, symbol: str, train_data: pd.DataFrame, test_data: pd.DataFrame
     ) -> Union[Any, tuple[Any, Iterable[str]]]:
-        """Trains model.
-
-        Args:
-            symbol: Ticker symbol of model (models are trained per symbol).
-            train_data: Train data.
-            test_data: Test data.
-
-        Returns:
-            Trained model.
+        """训练模型
+        
+        参数:
+            symbol: 模型的股票代码（每个股票代码训练一个模型）
+            train_data: 训练数据
+            test_data: 测试数据
+            
+        返回:
+            训练好的模型
         """
         return self._train_fn(symbol, train_data, test_data)
 
@@ -209,240 +178,212 @@ class ModelTrainer(ModelSource):
 
 
 def model(
-    name: str,
-    fn: Callable[..., Union[Any, tuple[Any, Iterable[str]]]],
-    indicators: Optional[Iterable[Indicator]] = None,
-    input_data_fn: Optional[Callable[[pd.DataFrame], pd.DataFrame]] = None,
-    predict_fn: Optional[Callable[[Any, pd.DataFrame], NDArray]] = None,
-    pretrained: bool = False,
-    **kwargs,
+    name: str,  # 模型名称
+    fn: Callable[..., Union[Any, tuple[Any, Iterable[str]]]],  # 函数
+    indicators: Optional[Iterable[Indicator]] = None,  # 指标
+    input_data_fn: Optional[Callable[[pd.DataFrame], pd.DataFrame]] = None,  # 输入数据预处理函数
+    predict_fn: Optional[Callable[[Any, pd.DataFrame], NDArray]] = None,  # 预测函数
+    pretrained: bool = False,  # 是否是预训练模型
+    **kwargs,  # 额外参数
 ) -> ModelSource:
-    r"""Creates a :class:`.ModelSource` instance and registers it globally with
-    ``name``.
-
-    Args:
-        name: Name for referencing the model globally.
-        fn: :class:`Callable` used to either train or load a model instance. If
-            for training, then ``fn`` has signature ``Callable[[symbol: str,
-            train_data: DataFrame, test_data: DataFrame, ...], DataFrame]``.
-            If for loading, then ``fn`` has signature
-            ``Callable[[symbol: str, train_start_date: datetime,
-            train_end_date: datetime, ...], DataFrame]``. This is expected to
-            return either a trained model instance, or a tuple containing a
-            trained model instance and a :class:`Iterable` of column names to
-            to be used as input for the model when making predictions.
-        indicators: :class:`Iterable` of
-            :class:`pybroker.indicator.Indicator`\ s used as features of the
-            model.
-        input_data_fn: :class:`Callable[[DataFrame], DataFrame]` for
-            preprocessing input data passed to the model when making
-            predictions. If set, ``input_data_fn`` will be called with a
-            :class:`pandas.DataFrame` containing all test data.
-        predict_fn: :class:`Callable[[Model, DataFrame], ndarray]` that
-            overrides calling the model's default ``predict`` function. If set,
-            ``predict_fn`` will be called with the trained model and a
-            :class:`pandas.DataFrame` containing all test data.
-        pretrained: If ``True``, then ``fn`` is used to load and return a
-            pre-trained model. If ``False``, ``fn`` is used to train and return
-            a new model. Defaults to ``False``.
-        \**kwargs: Additional arguments to pass to ``fn``.
-
-    Returns:
-        :class:`.ModelSource` instance.
+    r"""创建ModelSource实例并全局注册
+    
+    参数:
+        name: 全局引用模型的名称
+        fn: 用于训练或加载模型的可调用函数
+        indicators: 用作模型特征的指标的可迭代对象
+        input_data_fn: 用于预处理传递给模型进行预测的输入数据的可调用函数
+        predict_fn: 覆盖模型默认predict函数的可调用函数
+        pretrained: 如果为True，创建ModelLoader实例；否则创建ModelTrainer实例
+        **kwargs: 传递给fn的额外参数
+        
+    返回:
+        ModelSource实例
     """
     scope = StaticScope.instance()
-    indicator_names = (
-        tuple(sorted(set(ind.name for ind in indicators)))
-        if indicators is not None
-        else tuple()
-    )
+    ind_names = []
+    if indicators:
+        for indicator in indicators:
+            if not isinstance(indicator, Indicator):
+                raise TypeError(f"Expected Indicator, got {type(indicator)}.")
+            ind_names.append(indicator.name)
+    src: ModelSource
     if pretrained:
-        loader = ModelLoader(
-            name=name,
-            load_fn=fn,
-            indicator_names=indicator_names,
-            input_data_fn=input_data_fn,
-            predict_fn=predict_fn,
-            kwargs=kwargs,
+        src = ModelLoader(
+            name, fn, ind_names, input_data_fn, predict_fn, kwargs
         )
-        scope.set_model_source(loader)
-        return loader
     else:
-        trainer = ModelTrainer(
-            name=name,
-            train_fn=fn,
-            indicator_names=indicator_names,
-            input_data_fn=input_data_fn,
-            predict_fn=predict_fn,
-            kwargs=kwargs,
+        src = ModelTrainer(
+            name, fn, ind_names, input_data_fn, predict_fn, kwargs
         )
-        scope.set_model_source(trainer)
-        return trainer
+    scope.set_model_source(src)
+    return src
 
 
 class CachedModel(NamedTuple):
-    """Stores cached model data.
-
-    Attributes:
-        model: Trained model instance.
-        input_cols: Names of the columns to be used as input for the model when
-            making predictions.
+    """存储缓存的模型数据
+    
+    属性:
+        model: 训练好的模型实例
+        input_cols: 用作模型预测输入的列名称
     """
 
-    model: Any
-    input_cols: Optional[tuple[str]]
+    model: Any  # 模型实例
+    input_cols: Optional[tuple[str]]  # 输入列名称
 
 
 class ModelsMixin:
-    """Mixin implementing model related functionality."""
+    """实现模型相关功能的混入类"""
 
     def train_models(
         self,
-        model_syms: Iterable[ModelSymbol],
-        train_data: pd.DataFrame,
-        test_data: pd.DataFrame,
-        indicator_data: Mapping[IndicatorSymbol, pd.Series],
-        cache_date_fields: CacheDateFields,
+        model_syms: Iterable[ModelSymbol],  # 模型符号迭代器
+        train_data: pd.DataFrame,  # 训练数据
+        test_data: pd.DataFrame,  # 测试数据
+        indicator_data: Mapping[IndicatorSymbol, pd.Series],  # 指标数据映射
+        cache_date_fields: CacheDateFields,  # 缓存日期字段
     ) -> dict[ModelSymbol, TrainedModel]:
-        """Trains models for the provided :class:`pybroker.common.ModelSymbol`
-        pairs.
-
-        Args:
-            model_syms: ``Iterable`` of
-                :class:`pybroker.common.ModelSymbol` pairs of models to train.
-            train_data: :class:`pandas.DataFrame` of training data.
-            test_data: :class:`pandas.DataFrame` of test data.
-            indicator_data: ``Mapping`` of
-                :class:`pybroker.common.IndicatorSymbol` pairs to
-                ``pandas.Series`` of :class:`pybroker.indicator.Indicator`
-                values.
-            cache_date_fields: Date fields used to key cache data.
-
-        Returns:
-            ``dict`` mapping each :class:`pybroker.common.ModelSymbol` pair
-            to a :class:`pybroker.common.TrainedModel`.
+        """训练所提供的ModelSymbol对的模型
+        
+        参数:
+            model_syms: ModelSymbol对的可迭代对象
+            train_data: 训练数据
+            test_data: 测试数据
+            indicator_data: 将IndicatorSymbol对映射到指标值Series的字典
+            cache_date_fields: 用于键缓存数据的日期字段
+            
+        返回:
+            将每个ModelSymbol对映射到TrainedModel的字典
         """
-        if train_data.empty or not model_syms:
+        if not model_syms or train_data.empty:
             return {}
         scope = StaticScope.instance()
-        train_dates = get_unique_sorted_dates(train_data[DataCol.DATE.value])
-        test_dates = get_unique_sorted_dates(test_data[DataCol.DATE.value])
-        scope.logger.train_split_start(train_dates)
-        scope.logger.info_train_split_start(model_syms)
-        models, uncached_model_syms = self._get_cached_models(
+        # 检查缓存的模型
+        result, left_to_train = self._get_cached_models(
             model_syms, cache_date_fields
         )
-        if not uncached_model_syms:
-            scope.logger.loaded_models()
-            scope.logger.info_loaded_models(model_syms)
-            return models
-        if models:
-            scope.logger.info_loaded_models(models.keys())
-        start_date = to_datetime(train_dates[0])
-        end_date = to_datetime(train_dates[-1])
-        for model_sym in uncached_model_syms:
-            if model_sym in models:
+        if not left_to_train:
+            return result
+        # 准备训练和测试数据
+        train_dates = get_unique_sorted_dates(train_data[DataCol.DATE.value])
+        for sym_model in left_to_train:
+            sym, model_name = sym_model.symbol, sym_model.model_name
+            sym_train_data = self._slice_by_symbol(sym, train_data)
+            sym_test_data = self._slice_by_symbol(sym, test_data)
+            if sym_train_data.empty:
                 continue
-            model_name, sym = model_sym
-            source = scope.get_model_source(model_name)
-            if isinstance(source, ModelTrainer):
-                sym_train_data = self._slice_by_symbol(sym, train_data)
-                sym_test_data = self._slice_by_symbol(sym, test_data)
-                for ind_name in source.indicators:
-                    ind_series = indicator_data[IndicatorSymbol(ind_name, sym)]
-                    if not sym_train_data.empty:
-                        sym_train_data[ind_name] = ind_series[
-                            ind_series.index.isin(train_dates)
-                        ].values
-                    if not sym_test_data.empty:
-                        sym_test_data[ind_name] = ind_series[
-                            ind_series.index.isin(test_dates)
-                        ].values
-                scope.logger.info_train_model_start(model_sym)
-                model_result = source(sym, sym_train_data, sym_test_data)
-                scope.logger.info_train_model_completed(model_sym)
-            elif isinstance(source, ModelLoader):
-                model_result = source(sym, start_date, end_date)
-                scope.logger.info_loaded_model(model_sym)
-            else:
-                raise TypeError(f"Invalid ModelSource type: {type(source)}")
+            # 获取模型源并添加指标列
+            src = scope.get_model_source(model_name)
+            for ind_name in src.indicators:
+                ind_sym = IndicatorSymbol(ind_name, sym)
+                if ind_sym not in indicator_data:
+                    raise ValueError(f"Missing indicator: {ind_sym}")
+                ind_series = indicator_data[ind_sym]
+                sym_train_data[ind_name] = sym_train_data[
+                    DataCol.DATE.value
+                ].map(ind_series)
+                sym_test_data[ind_name] = sym_test_data[
+                    DataCol.DATE.value
+                ].map(ind_series)
+            # 训练模型并处理结果
+            ret_value = src(sym, sym_train_data, sym_test_data)
+            model: Any
             input_cols: Optional[tuple[str]] = None
-            if isinstance(model_result, tuple):
-                model = model_result[0]
-                input_cols = tuple(model_result[1])  # type: ignore[assignment]
+            if isinstance(ret_value, tuple):
+                model, input_cols = ret_value[0], tuple(ret_value[1])
             else:
-                model = model_result
-            models[model_sym] = TrainedModel(
+                model = ret_value
+            # 缓存模型并添加到结果
+            self._set_cached_model(
+                model, input_cols, sym_model, cache_date_fields
+            )
+            result[sym_model] = TrainedModel(
                 name=model_name,
                 instance=model,
-                predict_fn=source._predict_fn,
+                predict_fn=src._predict_fn,
                 input_cols=input_cols,
             )
-            self._set_cached_model(
-                model, input_cols, model_sym, cache_date_fields
-            )
-        scope.logger.train_split_completed()
-        return models
+        return result
 
     def _slice_by_symbol(self, symbol: str, df: pd.DataFrame) -> pd.DataFrame:
-        return (
-            df.loc[df[DataCol.SYMBOL.value] == symbol]
-            .drop(columns=DataCol.SYMBOL.value)
-            .sort_values(DataCol.DATE.value)
-        )
+        """按股票代码切片DataFrame
+        
+        参数:
+            symbol: 股票代码
+            df: 数据框
+            
+        返回:
+            只包含指定股票代码数据的DataFrame
+        """
+        return df[df[DataCol.SYMBOL.value] == symbol].copy()
 
     def _get_cached_models(
         self,
-        model_syms: Iterable[ModelSymbol],
-        cache_date_fields: CacheDateFields,
+        model_syms: Iterable[ModelSymbol],  # 模型符号迭代器
+        cache_date_fields: CacheDateFields,  # 缓存日期字段
     ) -> tuple[dict[ModelSymbol, TrainedModel], list[ModelSymbol]]:
-        model_syms = sorted(model_syms)
-        models: dict[ModelSymbol, TrainedModel] = {}
+        """获取缓存的模型
+        
+        参数:
+            model_syms: ModelSymbol对的可迭代对象
+            cache_date_fields: 用于键缓存数据的日期字段
+            
+        返回:
+            包含已缓存模型的字典和待训练模型符号列表的元组
+        """
         scope = StaticScope.instance()
-        if scope.model_cache is None:
-            return models, model_syms
-        uncached_model_syms = []
-        for model_sym in model_syms:
-            cache_key = ModelCacheKey(
-                symbol=model_sym.symbol,
-                model_name=model_sym.model_name,
-                **asdict(cache_date_fields),
+        result = {}
+        left_to_train = []
+        # 检查每个模型符号是否在缓存中
+        for sym_model in model_syms:
+            key = ModelCacheKey(
+                model_name=sym_model.model_name,
+                symbol=sym_model.symbol,
+                train_start_date=cache_date_fields.train_start_date,
+                train_end_date=cache_date_fields.train_end_date,
             )
-            scope.logger.debug_get_model_cache(cache_key)
-            cached_data = scope.model_cache.get(repr(cache_key))
-            if cached_data is not None:
-                input_cols = None
-                if isinstance(cached_data, CachedModel):
-                    model = cached_data.model
-                    input_cols = cached_data.input_cols
-                else:
-                    model = cached_data
-                source = scope.get_model_source(model_sym.model_name)
-                models[model_sym] = TrainedModel(
-                    name=model_sym.model_name,
-                    instance=model,
-                    predict_fn=source._predict_fn,
-                    input_cols=input_cols,
-                )
-            else:
-                uncached_model_syms.append(model_sym)
-        return models, uncached_model_syms
+            key_dict = asdict(key)
+            cache_model = scope.get_cached_model(key_dict)
+            if cache_model is None:
+                left_to_train.append(sym_model)
+                continue
+            # 添加缓存的模型到结果
+            src = scope.get_model_source(sym_model.model_name)
+            result[sym_model] = TrainedModel(
+                name=sym_model.model_name,
+                instance=cache_model.model,
+                predict_fn=src._predict_fn,
+                input_cols=cache_model.input_cols,
+            )
+        return result, left_to_train
 
     def _set_cached_model(
         self,
-        model: Any,
-        input_cols: Optional[tuple[str]],
-        model_sym: ModelSymbol,
-        cache_date_fields: CacheDateFields,
+        model: Any,  # 模型实例
+        input_cols: Optional[tuple[str]],  # 输入列名称
+        model_sym: ModelSymbol,  # 模型符号
+        cache_date_fields: CacheDateFields,  # 缓存日期字段
     ):
+        """缓存模型
+        
+        参数:
+            model: 模型实例
+            input_cols: 输入列名称
+            model_sym: 模型符号
+            cache_date_fields: 缓存日期字段
+        """
         scope = StaticScope.instance()
-        if scope.model_cache is None:
-            return
-        cache_key = ModelCacheKey(
-            symbol=model_sym.symbol,
+        key = ModelCacheKey(
             model_name=model_sym.model_name,
-            **asdict(cache_date_fields),
+            symbol=model_sym.symbol,
+            train_start_date=cache_date_fields.train_start_date,
+            train_end_date=cache_date_fields.train_end_date,
         )
-        cached_model = CachedModel(model, input_cols)
-        scope.logger.debug_set_model_cache(cache_key)
-        scope.model_cache.set(repr(cache_key), cached_model)
+        key_dict = asdict(key)
+        scope.set_cached_model(key_dict, CachedModel(model, input_cols))
+
+# 该模块提供了PyBroker的机器学习模型功能，支持模型的训练、加载和预测。
+# 核心类ModelSource是所有模型源的基类，ModelTrainer用于训练模型，ModelLoader用于加载预训练模型。
+# 提供了全局注册模型的函数model()，以便在策略中轻松使用。
+# 支持模型的缓存机制，避免重复训练提高回测效率。
+# ModelsMixin类实现了多个模型的批量训练和管理功能。

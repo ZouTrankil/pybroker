@@ -1,4 +1,4 @@
-"""Contains indicator related functionality."""
+"""Contains indicator related functionality."""  # 包含指标相关功能
 
 """Copyright (C) 2023 Edward West. All rights reserved.
 
@@ -33,6 +33,7 @@ from typing import (
 
 
 def _to_bar_data(df: pd.DataFrame) -> BarData:
+    """将DataFrame转换为BarData对象"""
     df = df.reset_index()
     required_cols = (
         DataCol.DATE,
@@ -62,40 +63,40 @@ def _to_bar_data(df: pd.DataFrame) -> BarData:
 
 
 class Indicator:
-    """Class representing an indicator.
-
-    Args:
-        name: Name of indicator.
-        fn: :class:`Callable` used to compute the series of indicator values.
-        kwargs: ``dict`` of kwargs to pass to ``fn``.
+    """代表一个技术指标的类
+    
+    参数:
+        name: 指标名称
+        fn: 用于计算指标值序列的可调用函数
+        kwargs: 传递给fn的关键字参数字典
     """
 
     def __init__(
         self,
-        name: str,
-        fn: Callable[..., NDArray[np.float64]],
-        kwargs: dict[str, Any],
+        name: str,  # 指标名称
+        fn: Callable[..., NDArray[np.float64]],  # 指标计算函数
+        kwargs: dict[str, Any],  # 关键字参数
     ):
         self.name = name
         self._fn = functools.partial(fn, **kwargs)
         self._kwargs = kwargs
 
     def relative_entropy(self, data: Union[BarData, pd.DataFrame]) -> float:
-        """Generates indicator data with ``data`` and computes its relative
-        `entropy
-        <https://en.wikipedia.org/wiki/Entropy_(information_theory)>`_.
+        """使用data生成指标数据并计算其相对熵值
+        
+        相对熵是衡量数据分布不确定性的指标
         """
         return relative_entropy(self(data).values)
 
     def iqr(self, data: Union[BarData, pd.DataFrame]) -> float:
-        """Generates indicator data with ``data`` and computes its
-        `interquartile range (IQR)
-        <https://en.wikipedia.org/wiki/Interquartile_range>`_.
+        """使用data生成指标数据并计算其四分位距(IQR)
+        
+        四分位距是衡量数据分散程度的指标，等于第三四分位减去第一四分位
         """
         return iqr(self(data).values)
 
     def __call__(self, data: Union[BarData, pd.DataFrame]) -> pd.Series:
-        """Computes indicator values."""
+        """计算指标值"""
         if isinstance(data, pd.DataFrame):
             data = _to_bar_data(data)
         values = self._fn(data)
@@ -117,17 +118,15 @@ class Indicator:
 def indicator(
     name: str, fn: Callable[..., NDArray[np.float64]], **kwargs
 ) -> Indicator:
-    r"""Creates an :class:`.Indicator` instance and registers it globally with
-    ``name``.
-
-    Args:
-        name: Name for referencing the indicator globally.
-        fn: ``Callable[[BarData, ...], NDArray[float]]`` used to compute the
-            series of indicator values.
-        \**kwargs: Additional arguments to pass to ``fn``.
-
-    Returns:
-        :class:`.Indicator` instance.
+    r"""创建Indicator实例并全局注册该指标
+    
+    参数:
+        name: 全局引用此指标的名称
+        fn: 用于计算指标值的可调用函数
+        \**kwargs: 传递给fn的额外参数
+        
+    返回:
+        Indicator实例
     """
     scope = StaticScope.instance()
     indicator = Indicator(name, fn, kwargs)
@@ -136,19 +135,20 @@ def indicator(
 
 
 def _decorate_indicator_fn(ind_name: str):
+    """装饰指标函数，用于并行计算"""
     fn = StaticScope.instance().get_indicator(ind_name).__call__
 
     def decorated_indicator_fn(
-        symbol: str,
-        ind_name: str,
-        date: NDArray[np.datetime64],
-        open: NDArray[np.float64],
-        high: NDArray[np.float64],
-        low: NDArray[np.float64],
-        close: NDArray[np.float64],
-        volume: Optional[NDArray[np.float64]],
-        vwap: Optional[NDArray[np.float64]],
-        custom_col_data: Mapping[str, Optional[NDArray]],
+        symbol: str,  # 股票代码
+        ind_name: str,  # 指标名称
+        date: NDArray[np.datetime64],  # 日期数组
+        open: NDArray[np.float64],  # 开盘价数组
+        high: NDArray[np.float64],  # 最高价数组
+        low: NDArray[np.float64],  # 最低价数组
+        close: NDArray[np.float64],  # 收盘价数组
+        volume: Optional[NDArray[np.float64]],  # 成交量数组
+        vwap: Optional[NDArray[np.float64]],  # 成交量加权平均价数组
+        custom_col_data: Mapping[str, Optional[NDArray]],  # 自定义列数据
     ) -> tuple[IndicatorSymbol, pd.Series]:
         bar_data = BarData(
             date=date,
@@ -167,33 +167,26 @@ def _decorate_indicator_fn(ind_name: str):
 
 
 class IndicatorsMixin:
-    """Mixin implementing indicator related functionality."""
+    """实现指标相关功能的混入类"""
 
     def compute_indicators(
         self,
-        df: pd.DataFrame,
-        indicator_syms: Iterable[IndicatorSymbol],
-        cache_date_fields: Optional[CacheDateFields],
-        disable_parallel: bool,
+        df: pd.DataFrame,  # 数据框
+        indicator_syms: Iterable[IndicatorSymbol],  # 指标符号迭代器
+        cache_date_fields: Optional[CacheDateFields],  # 缓存日期字段
+        disable_parallel: bool,  # 是否禁用并行计算
     ) -> dict[IndicatorSymbol, pd.Series]:
-        """Computes indicator data for the provided
-        :class:`pybroker.common.IndicatorSymbol` pairs.
-
-        Args:
-            df: :class:`pandas.DataFrame` used to compute the indicator values.
-            indicator_syms: ``Iterable`` of
-                :class:`pybroker.common.IndicatorSymbol` pairs of indicators
-                to compute.
-            cache_date_fields: Date fields used to key cache data. Pass
-                ``None`` to disable caching.
-            disable_parallel: If ``True``, indicator data is computed
-                serially for all :class:`pybroker.common.IndicatorSymbol`
-                pairs. If ``False``, indicator data is computed in parallel
-                using multiple processes.
-
-        Returns:
-            ``dict`` mapping each :class:`pybroker.common.IndicatorSymbol` pair
-            to a computed :class:`pandas.Series` of indicator values.
+        """计算所提供的IndicatorSymbol对的指标数据
+        
+        参数:
+            df: 用于计算指标值的DataFrame
+            indicator_syms: IndicatorSymbol对的可迭代对象
+            cache_date_fields: 用于键缓存数据的日期字段，传None禁用缓存
+            disable_parallel: 如果为True，则串行计算所有IndicatorSymbol对的指标数据；
+                            如果为False，则使用多进程并行计算
+        
+        返回:
+            将每个IndicatorSymbol对映射到计算得出的指标值Series的字典
         """
         if not indicator_syms or df.empty:
             return {}
@@ -1183,3 +1176,8 @@ def laguerre_rsi(name: str, fe_length: int = 13) -> Indicator:
         )
 
     return indicator(name, _laguerre_rsi)
+
+# 该模块提供了PyBroker的技术指标功能，包括指标的创建、计算和缓存。
+# 核心类Indicator表示一个技术指标，IndicatorSet用于管理多个指标。
+# 库内置了丰富的技术指标函数，如MACD、RSI、随机指标和趋势指标等。
+# 支持并行计算指标，提高大规模回测效率，并提供缓存机制避免重复计算。

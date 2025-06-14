@@ -1,4 +1,4 @@
-"""Contains implementation for backtesting trading strategies."""
+"""Contains implementation for backtesting trading strategies."""  # 包含回测交易策略的实现
 
 """Copyright (C) 2023 Edward West. All rights reserved.
 
@@ -11,51 +11,51 @@ import numpy as np
 import pandas as pd
 from pybroker.cache import CacheDateFields
 from pybroker.common import (
-    BarData,
-    DataCol,
-    Day,
-    IndicatorSymbol,
-    ModelSymbol,
-    PriceType,
-    get_unique_sorted_dates,
-    quantize,
-    to_datetime,
-    to_decimal,
-    to_seconds,
-    verify_data_source_columns,
-    verify_date_range,
+    BarData,  # K线数据
+    DataCol,  # 数据列枚举
+    Day,  # 日期枚举
+    IndicatorSymbol,  # 指标符号类型
+    ModelSymbol,  # 模型符号类型
+    PriceType,  # 价格类型枚举
+    get_unique_sorted_dates,  # 获取唯一排序日期
+    quantize,  # 量化函数
+    to_datetime,  # 转换为日期时间
+    to_decimal,  # 转换为小数
+    to_seconds,  # 转换为秒
+    verify_data_source_columns,  # 验证数据源列
+    verify_date_range,  # 验证日期范围
 )
-from pybroker.config import StrategyConfig
+from pybroker.config import StrategyConfig  # 策略配置
 from pybroker.context import (
-    ExecContext,
-    ExecResult,
-    PosSizeContext,
-    set_exec_ctx_data,
-    set_pos_size_ctx_data,
+    ExecContext,  # 执行上下文
+    ExecResult,  # 执行结果
+    PosSizeContext,  # 仓位大小上下文
+    set_exec_ctx_data,  # 设置执行上下文数据
+    set_pos_size_ctx_data,  # 设置仓位大小上下文数据
 )
-from pybroker.data import AlpacaCrypto, DataSource
-from pybroker.eval import BootstrapResult, EvalMetrics, EvaluateMixin
-from pybroker.indicator import Indicator, IndicatorsMixin
-from pybroker.model import ModelSource, ModelsMixin, TrainedModel
+from pybroker.data import AlpacaCrypto, DataSource  # 数据源
+from pybroker.eval import BootstrapResult, EvalMetrics, EvaluateMixin  # 评估工具
+from pybroker.indicator import Indicator, IndicatorsMixin  # 指标
+from pybroker.model import ModelSource, ModelsMixin, TrainedModel  # 模型
 from pybroker.portfolio import (
-    Order,
-    Portfolio,
-    PortfolioBar,
-    PositionBar,
-    StopRecord,
-    Trade,
+    Order,  # 订单
+    Portfolio,  # 投资组合
+    PortfolioBar,  # 投资组合K线
+    PositionBar,  # 仓位K线
+    StopRecord,  # 止损止盈记录
+    Trade,  # 交易
 )
 from pybroker.scope import (
-    ColumnScope,
-    IndicatorScope,
-    ModelInputScope,
-    PendingOrderScope,
-    PredictionScope,
-    PriceScope,
-    StaticScope,
-    get_signals,
+    ColumnScope,  # 列作用域
+    IndicatorScope,  # 指标作用域
+    ModelInputScope,  # 模型输入作用域
+    PendingOrderScope,  # 待处理订单作用域
+    PredictionScope,  # 预测作用域
+    PriceScope,  # 价格作用域
+    StaticScope,  # 静态作用域
+    get_signals,  # 获取信号
 )
-from pybroker.slippage import SlippageModel
+from pybroker.slippage import SlippageModel  # 滑点模型
 from collections import defaultdict, deque
 from dataclasses import dataclass
 from datetime import datetime
@@ -78,6 +78,7 @@ from typing import (
 def _between(
     df: pd.DataFrame, start_date: datetime, end_date: datetime
 ) -> pd.DataFrame:
+    """筛选指定日期范围内的数据框"""
     if df.empty:
         return df
     return df[
@@ -87,110 +88,96 @@ def _between(
 
 
 def _sort_by_score(result: ExecResult) -> float:
+    """根据执行结果的分数进行排序"""
     return 0.0 if result.score is None else result.score
 
 
 class Execution(NamedTuple):
-    r"""Represents an execution of a :class:`.Strategy`. Holds a reference to
-    a :class:`Callable` that implements trading logic.
+    r"""代表一个Strategy的执行。保存实现交易逻辑的Callable引用。
 
-    Attributes:
-        id: Unique ID.
-        symbols: Ticker symbols used for execution of ``fn``.
-        fn: Implements trading logic.
-        model_names: Names of :class:`pybroker.model.ModelSource`\ s used for
-            execution of ``fn``.
-        indicator_names: Names of :class:`pybroker.indicator.Indicator`\ s
-            used for execution of ``fn``.
+    属性:
+        id: 唯一标识符。
+        symbols: 用于执行fn的股票代码。
+        fn: 实现交易逻辑的函数。
+        model_names: 用于执行fn的ModelSource名称。
+        indicator_names: 用于执行fn的Indicator名称。
     """
 
-    id: int
-    symbols: frozenset[str]
-    fn: Optional[Callable[[ExecContext], None]]
-    model_names: frozenset[str]
-    indicator_names: frozenset[str]
+    id: int  # 唯一ID
+    symbols: frozenset[str]  # 股票代码集合
+    fn: Optional[Callable[[ExecContext], None]]  # 交易逻辑函数
+    model_names: frozenset[str]  # 模型名称集合
+    indicator_names: frozenset[str]  # 指标名称集合
 
 
 class BacktestMixin:
-    """Mixin implementing backtesting functionality."""
+    """回测功能的混入类"""
 
     def backtest_executions(
         self,
-        config: StrategyConfig,
-        executions: set[Execution],
-        before_exec_fn: Optional[Callable[[Mapping[str, ExecContext]], None]],
-        after_exec_fn: Optional[Callable[[Mapping[str, ExecContext]], None]],
-        sessions: Mapping[str, MutableMapping],
-        models: Mapping[ModelSymbol, TrainedModel],
-        indicator_data: Mapping[IndicatorSymbol, pd.Series],
-        test_data: pd.DataFrame,
-        portfolio: Portfolio,
-        pos_size_handler: Optional[Callable[[PosSizeContext], None]],
-        exit_dates: Mapping[str, np.datetime64],
-        train_only: bool = False,
-        slippage_model: Optional[SlippageModel] = None,
-        enable_fractional_shares: bool = False,
-        round_fill_price: bool = True,
-        warmup: Optional[int] = None,
+        config: StrategyConfig,  # 策略配置
+        executions: set[Execution],  # 执行集合
+        before_exec_fn: Optional[Callable[[Mapping[str, ExecContext]], None]],  # 执行前函数
+        after_exec_fn: Optional[Callable[[Mapping[str, ExecContext]], None]],  # 执行后函数
+        sessions: Mapping[str, MutableMapping],  # 会话映射
+        models: Mapping[ModelSymbol, TrainedModel],  # 模型映射
+        indicator_data: Mapping[IndicatorSymbol, pd.Series],  # 指标数据映射
+        test_data: pd.DataFrame,  # 测试数据
+        portfolio: Portfolio,  # 投资组合
+        pos_size_handler: Optional[Callable[[PosSizeContext], None]],  # 仓位大小处理函数
+        exit_dates: Mapping[str, np.datetime64],  # 退出日期映射
+        train_only: bool = False,  # 是否仅训练
+        slippage_model: Optional[SlippageModel] = None,  # 滑点模型
+        enable_fractional_shares: bool = False,  # 是否启用分数股
+        round_fill_price: bool = True,  # 是否四舍五入成交价
+        warmup: Optional[int] = None,  # 预热期
     ) -> dict[str, pd.DataFrame]:
-        r"""Backtests a ``set`` of :class:`.Execution`\ s that implement
-        trading logic.
+        r"""回测一组实现交易逻辑的执行。
 
-        Args:
-            config: :class:`pybroker.config.StrategyConfig`.
-            executions: :class:`.Execution`\ s to run.
-            sessions: :class:`Mapping` of symbols to :class:`Mapping` of custom
-                data that persists for every bar during the
-                :class:`.Execution`.
-            models: :class:`Mapping` of :class:`pybroker.common.ModelSymbol`
-                pairs to :class:`pybroker.common.TrainedModel`\ s.
-            indicator_data: :class:`Mapping` of
-                :class:`pybroker.common.IndicatorSymbol` pairs to
-                :class:`pandas.Series` of :class:`pybroker.indicator.Indicator`
-                values.
-            test_data: :class:`pandas.DataFrame` of test data.
-            portfolio: :class:`pybroker.portfolio.Portfolio`.
-            pos_size_handler: :class:`Callable` that sets position sizes when
-                placing orders for buy and sell signals.
-            exit_dates: :class:`Mapping` of symbols to exit dates.
-            train_only: Whether the backtest is run with trading rules or
-                only trains models.
-            enable_fractional_shares: Whether to enable trading fractional
-                shares.
-            round_fill_price: Whether to round fill prices to the nearest cent.
-            warmup: Number of bars that need to pass before running the
-                executions.
+        参数:
+            config: 策略配置
+            executions: 要运行的执行集合
+            sessions: 在每个K线期间持续存在的自定义数据映射
+            models: 模型符号对到已训练模型的映射
+            indicator_data: 指标符号对到指标值的映射
+            test_data: 测试数据框
+            portfolio: 投资组合
+            pos_size_handler: 设置买卖信号下单时仓位大小的函数
+            exit_dates: 符号到退出日期的映射
+            train_only: 是否仅用交易规则运行回测或仅训练模型
+            enable_fractional_shares: 是否启用分数股交易
+            round_fill_price: 是否将成交价四舍五入到最接近的分
+            warmup: 运行执行前需要经过的K线数量
 
-        Returns:
-            Dictionary of :class:`pandas.DataFrame`\ s containing bar data,
-            indicator data, and model predictions for each symbol when
-            :attr:`pybroker.config.StrategyConfig.return_signals` is ``True``.
+        返回:
+            当StrategyConfig.return_signals为True时，返回包含每个符号的K线数据、
+            指标数据和模型预测的数据框字典。
         """
-        test_dates = get_unique_sorted_dates(test_data[DataCol.DATE.value])
-        test_syms = sorted(test_data[DataCol.SYMBOL.value].unique())
+        test_dates = get_unique_sorted_dates(test_data[DataCol.DATE.value])  # 获取测试日期
+        test_syms = sorted(test_data[DataCol.SYMBOL.value].unique())  # 获取测试股票代码
         test_data = (
             test_data.reset_index(drop=True)
             .set_index([DataCol.SYMBOL.value, DataCol.DATE.value])
             .sort_index()
-        )
-        col_scope = ColumnScope(test_data)
-        ind_scope = IndicatorScope(indicator_data, test_dates)
-        input_scope = ModelInputScope(col_scope, ind_scope, models)
-        pred_scope = PredictionScope(models, input_scope)
-        if train_only:
+        )  # 重设索引并排序
+        col_scope = ColumnScope(test_data)  # 列作用域
+        ind_scope = IndicatorScope(indicator_data, test_dates)  # 指标作用域
+        input_scope = ModelInputScope(col_scope, ind_scope, models)  # 模型输入作用域
+        pred_scope = PredictionScope(models, input_scope)  # 预测作用域
+        if train_only:  # 如果仅训练
             if config.return_signals:
                 return get_signals(test_syms, col_scope, ind_scope, pred_scope)
             return {}
-        sym_end_index: dict[str, int] = defaultdict(int)
-        price_scope = PriceScope(col_scope, sym_end_index, round_fill_price)
-        pending_order_scope = PendingOrderScope()
-        exec_ctxs: dict[str, ExecContext] = {}
-        exec_fns: dict[str, Callable[[ExecContext], None]] = {}
-        for sym in test_syms:
-            for exec in executions:
+        sym_end_index: dict[str, int] = defaultdict(int)  # 股票代码结束索引
+        price_scope = PriceScope(col_scope, sym_end_index, round_fill_price)  # 价格作用域
+        pending_order_scope = PendingOrderScope()  # 待处理订单作用域
+        exec_ctxs: dict[str, ExecContext] = {}  # 执行上下文字典
+        exec_fns: dict[str, Callable[[ExecContext], None]] = {}  # 执行函数字典
+        for sym in test_syms:  # 遍历测试股票代码
+            for exec in executions:  # 遍历执行
                 if sym not in exec.symbols:
                     continue
-                exec_ctxs[sym] = ExecContext(
+                exec_ctxs[sym] = ExecContext(  # 创建执行上下文
                     symbol=sym,
                     config=config,
                     portfolio=portfolio,

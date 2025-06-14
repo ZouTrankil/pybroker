@@ -1,4 +1,4 @@
-r"""Contains :class:`.DataSource`\ s used to fetch external data."""
+r"""Contains :class:`.DataSource`\ s used to fetch external data."""  # 包含用于获取外部数据的DataSource类
 
 """Copyright (C) 2023 Edward West. All rights reserved.
 
@@ -33,44 +33,34 @@ from pybroker.scope import StaticScope
 
 
 class DataSourceCacheMixin:
-    """Mixin that implements fetching and storing cached :class:`.DataSource`
-    data.
-    """
+    """实现获取和存储缓存DataSource数据的混入类"""
 
     def get_cached(
         self,
-        symbols: Iterable[str],
-        timeframe: str,
-        start_date: Union[str, datetime, pd.Timestamp, np.datetime64],
-        end_date: Union[str, datetime, pd.Timestamp, np.datetime64],
-        adjust: Optional[Any],
+        symbols: Iterable[str],  # 获取缓存数据的股票代码
+        timeframe: str,  # 时间框架
+        start_date: Union[str, datetime, pd.Timestamp, np.datetime64],  # 开始日期
+        end_date: Union[str, datetime, pd.Timestamp, np.datetime64],  # 结束日期
+        adjust: Optional[Any],  # 调整类型
     ) -> tuple[pd.DataFrame, Iterable[str]]:
-        """Retrieves cached data from disk when caching is enabled with
-        :meth:`pybroker.cache.enable_data_source_cache`.
-
-        Args:
-            symbols: :class:`Iterable` of symbols for fetching cached data.
-            timeframe: Formatted string that specifies the timeframe
-                resolution of the cached data. The timeframe string supports
-                the following units:
-
-                - ``"s"``/``"sec"``: seconds
-                - ``"m"``/``"min"``: minutes
-                - ``"h"``/``"hour"``: hours
-                - ``"d"``/``"day"``: days
-                - ``"w"``/``"week"``: weeks
-
-
-                An example timeframe string is ``1h 30m``.
-            start_date: Starting date of the cached data (inclusive).
-            end_date: Ending date of the cached data (inclusive).
-            adjust: The type of adjustment to make.
-
-        Returns:
-            ``tuple[pandas.DataFrame, Iterable[str]]`` containing a
-            :class:`pandas.DataFrame` with the cached data, and an
-            ``Iterable[str]`` of symbols for which no cached data was
-            found.
+        """当通过enable_data_source_cache启用缓存时，从磁盘检索缓存数据
+        
+        参数:
+            symbols: 要获取缓存数据的股票代码
+            timeframe: 指定缓存数据的时间框架分辨率的格式化字符串
+                      支持以下单位:
+                      - "s"/"sec": 秒
+                      - "m"/"min": 分钟
+                      - "h"/"hour": 小时
+                      - "d"/"day": 天
+                      - "w"/"week": 周
+                      示例: "1h 30m"
+            start_date: 缓存数据的开始日期(包含)
+            end_date: 缓存数据的结束日期(包含)
+            adjust: 要进行的调整类型
+            
+        返回:
+            包含缓存数据的DataFrame和未找到缓存数据的股票代码的元组
         """
         df = pd.DataFrame()
         scope = StaticScope.instance()
@@ -109,31 +99,27 @@ class DataSourceCacheMixin:
 
     def set_cached(
         self,
-        timeframe: str,
-        start_date: Union[str, datetime, pd.Timestamp, np.datetime64],
-        end_date: Union[str, datetime, pd.Timestamp, np.datetime64],
-        adjust: Optional[Any],
-        data: pd.DataFrame,
+        timeframe: str,  # 时间框架
+        start_date: Union[str, datetime, pd.Timestamp, np.datetime64],  # 开始日期
+        end_date: Union[str, datetime, pd.Timestamp, np.datetime64],  # 结束日期
+        adjust: Optional[Any],  # 调整类型
+        data: pd.DataFrame,  # 要缓存的数据
     ):
-        """Stores data to disk cache when caching is enabled with
-        :meth:`pybroker.cache.enable_data_source_cache`.
-
-        Args:
-            timeframe: Formatted string that specifies the timeframe
-                resolution of the data to cache. The timeframe string supports
-                the following units:
-
-                - ``"s"``/``"sec"``: seconds
-                - ``"m"``/``"min"``: minutes
-                - ``"h"``/``"hour"``: hours
-                - ``"d"``/``"day"``: days
-                - ``"w"``/``"week"``: weeks
-
-                An example timeframe string would be ``1h 30m``.
-            start_date: Starting date of the data to cache (inclusive).
-            end_date: Ending date of the data to cache (inclusive).
-            adjust: The type of adjustment to make.
-            data: :class:`pandas.DataFrame` containing the data to cache.
+        """当通过enable_data_source_cache启用缓存时，将数据存储到磁盘缓存
+        
+        参数:
+            timeframe: 指定要缓存的数据的时间框架分辨率的格式化字符串
+                      支持以下单位:
+                      - "s"/"sec": 秒
+                      - "m"/"min": 分钟
+                      - "h"/"hour": 小时
+                      - "d"/"day": 天
+                      - "w"/"week": 周
+                      示例: "1h 30m"
+            start_date: 要缓存的数据的开始日期(包含)
+            end_date: 要缓存的数据的结束日期(包含)
+            adjust: 要进行的调整类型
+            data: 包含要缓存的数据的DataFrame
         """
         if data.empty:
             return
@@ -158,11 +144,7 @@ class DataSourceCacheMixin:
 
 
 class DataSource(ABC, DataSourceCacheMixin):
-    """Base class for querying data from an external source. Extend this class
-    and override :meth:`._fetch_data` to implement a custom
-    :class:`.DataSource` that can be used with
-    :class:`pybroker.strategy.Strategy`.
-    """
+    """从外部源查询数据的基类。扩展此类并重写_fetch_data方法，以实现可与Strategy一起使用的自定义DataSource"""
 
     def __init__(self):
         self._scope = StaticScope.instance()
@@ -170,34 +152,30 @@ class DataSource(ABC, DataSourceCacheMixin):
 
     def query(
         self,
-        symbols: Union[str, Iterable[str]],
-        start_date: Union[str, datetime],
-        end_date: Union[str, datetime],
-        timeframe: Optional[str] = "",
-        adjust: Optional[Any] = None,
+        symbols: Union[str, Iterable[str]],  # 要查询的股票代码
+        start_date: Union[str, datetime],  # 开始日期
+        end_date: Union[str, datetime],  # 结束日期
+        timeframe: Optional[str] = "",  # 时间框架
+        adjust: Optional[Any] = None,  # 调整类型
     ) -> pd.DataFrame:
-        """Queries data. Cached data is returned if caching is enabled by
-        calling :meth:`pybroker.cache.enable_data_source_cache`.
-
-        Args:
-            symbols: Symbols of the data to query.
-            start_date: Start date of the data to query (inclusive).
-            end_date: End date of the data to query (inclusive).
-            timeframe: Formatted string that specifies the timeframe
-                resolution to query. The timeframe string supports the
-                following units:
-
-                - ``"s"``/``"sec"``: seconds
-                - ``"m"``/``"min"``: minutes
-                - ``"h"``/``"hour"``: hours
-                - ``"d"``/``"day"``: days
-                - ``"w"``/``"week"``: weeks
-
-                An example timeframe string is ``1h 30m``.
-            adjust: The type of adjustment to make.
-
-        Returns:
-            :class:`pandas.DataFrame` containing the queried data.
+        """查询数据。如果通过调用enable_data_source_cache启用了缓存，则返回缓存的数据
+        
+        参数:
+            symbols: 要查询的数据的股票代码
+            start_date: 要查询的数据的开始日期(包含)
+            end_date: 要查询的数据的结束日期(包含)
+            timeframe: 指定要查询的时间框架分辨率的格式化字符串
+                      支持以下单位:
+                      - "s"/"sec": 秒
+                      - "m"/"min": 分钟
+                      - "h"/"hour": 小时
+                      - "d"/"day": 天
+                      - "w"/"week": 周
+                      示例: "1h 30m"
+            adjust: 要进行的调整类型
+            
+        返回:
+            包含查询数据的DataFrame
         """
         start_date = to_datetime(start_date)
         end_date = to_datetime(end_date)
@@ -250,50 +228,38 @@ class DataSource(ABC, DataSourceCacheMixin):
     @abstractmethod
     def _fetch_data(
         self,
-        symbols: frozenset[str],
-        start_date: datetime,
-        end_date: datetime,
-        timeframe: Optional[str],
-        adjust: Optional[Any],
+        symbols: frozenset[str],  # 要获取的股票代码集合
+        start_date: datetime,  # 开始日期
+        end_date: datetime,  # 结束日期
+        timeframe: Optional[str],  # 时间框架
+        adjust: Optional[Any],  # 调整类型
     ) -> pd.DataFrame:
-        """:meta public:
-        Override this method to return data from a custom
-        source. The returned :class:`pandas.DataFrame` must contain the
-        following columns: ``symbol``, ``date``, ``open``, ``high``, ``low``,
-        and ``close``.
-
-        Args:
-            symbols: Ticker symbols of the data to query.
-            start_date: Start date of the data to query (inclusive).
-            end_date: End date of the data to query (inclusive).
-            timeframe: Formatted string that specifies the timeframe
-                resolution to query. The timeframe string supports the
-                following units:
-
-                - ``"s"``/``"sec"``: seconds
-                - ``"m"``/``"min"``: minutes
-                - ``"h"``/``"hour"``: hours
-                - ``"d"``/``"day"``: days
-                - ``"w"``/``"week"``: weeks
-
-                An example timeframe string is ``1h 30m``.
-            adjust: The type of adjustment to make.
-
-        Returns:
-            :class:`pandas.DataFrame` containing the queried data.
+        """获取数据的抽象方法，需要由子类实现
+        
+        参数:
+            symbols: 要获取的股票代码的冻结集合
+            start_date: 开始日期(包含)
+            end_date: 结束日期(包含)
+            timeframe: 时间框架
+            adjust: 调整类型
+            
+        返回:
+            包含获取数据的DataFrame
         """
+        pass
 
     def _format_timeframe(self, timeframe: Optional[str]) -> str:
-        if not timeframe:
-            return ""
-        return " ".join(
-            f"{part[0]}{part[1]}" for part in parse_timeframe(timeframe)
-        )
+        """格式化时间框架字符串"""
+        return "" if timeframe is None else timeframe
 
 
 def _parse_alpaca_timeframe(
     timeframe: Optional[str],
 ) -> tuple[int, TimeFrameUnit]:
+    """解析Alpaca时间框架
+    
+    将PyBroker的时间框架字符串转换为Alpaca的TimeFrame对象
+    """
     if timeframe is None:
         raise ValueError("Timeframe needs to be specified for Alpaca.")
     parts = parse_timeframe(timeframe)
@@ -314,34 +280,74 @@ def _parse_alpaca_timeframe(
 
 
 class Alpaca(DataSource):
-    """Retrieves stock data from `Alpaca <https://alpaca.markets/>`_."""
+    """从Alpaca获取股票数据
+    
+    参数:
+        api_key: Alpaca API密钥
+        api_secret: Alpaca API密钥
+    """
 
-    __EST: Final = "US/Eastern"
+    __EST: Final = "US/Eastern"  # 东部标准时间时区
 
     def __init__(self, api_key: str, api_secret: str):
+        """初始化Alpaca数据源
+        
+        参数:
+            api_key: Alpaca API密钥
+            api_secret: Alpaca API密钥
+        """
         super().__init__()
-        self._api = alpaca_stock.StockHistoricalDataClient(api_key, api_secret)
+        self._stock_client = alpaca_stock.StockHistoricalDataClient(
+            api_key, api_secret
+        )
 
     def query(
         self,
-        symbols: Union[str, Iterable[str]],
-        start_date: Union[str, datetime],
-        end_date: Union[str, datetime],
-        timeframe: Optional[str] = "1d",
-        adjust: Optional[Any] = None,
+        symbols: Union[str, Iterable[str]],  # 股票代码
+        start_date: Union[str, datetime],  # 开始日期
+        end_date: Union[str, datetime],  # 结束日期
+        timeframe: Optional[str] = "1d",  # 时间框架，默认为1天
+        adjust: Optional[Any] = None,  # 调整类型
     ) -> pd.DataFrame:
+        """查询Alpaca股票数据
+        
+        参数:
+            symbols: 要查询的股票代码
+            start_date: 开始日期(包含)
+            end_date: 结束日期(包含)
+            timeframe: 时间框架，默认为"1d"(一天)
+            adjust: 调整类型，支持以下选项:
+                  - all: 全部调整(分红和拆分)
+                  - dividend: 仅分红调整
+                  - split: 仅拆分调整
+                  - None: 不调整(默认)
+                  
+        返回:
+            包含查询股票数据的DataFrame
+        """
         _parse_alpaca_timeframe(timeframe)
         return super().query(symbols, start_date, end_date, timeframe, adjust)
 
     def _fetch_data(
         self,
-        symbols: frozenset[str],
-        start_date: datetime,
-        end_date: datetime,
-        timeframe: Optional[str],
-        adjust: Optional[Any],
+        symbols: frozenset[str],  # 股票代码集合
+        start_date: datetime,  # 开始日期
+        end_date: datetime,  # 结束日期
+        timeframe: Optional[str],  # 时间框架
+        adjust: Optional[Any],  # 调整类型
     ) -> pd.DataFrame:
-        """:meta private:"""
+        """从Alpaca获取股票数据
+        
+        参数:
+            symbols: 要获取的股票代码冻结集合
+            start_date: 开始日期(包含)
+            end_date: 结束日期(包含)
+            timeframe: 时间框架
+            adjust: 调整类型
+            
+        返回:
+            包含获取股票数据的DataFrame
+        """
         amount, unit = _parse_alpaca_timeframe(timeframe)
         adj_enum = None
         if adjust is not None:
@@ -360,7 +366,7 @@ class Alpaca(DataSource):
             adjustment=adj_enum,
             feed=None,
         )
-        df = self._api.get_stock_bars(request).df  # type: ignore[union-attr]
+        df = self._stock_client.get_stock_bars(request).df  # type: ignore[union-attr]
         if df.columns.empty:
             return pd.DataFrame(
                 columns=[
@@ -387,15 +393,15 @@ class Alpaca(DataSource):
 
 
 class AlpacaCrypto(DataSource):
-    """Retrieves crypto data from `Alpaca <https://alpaca.markets/>`_.
-
-    Args:
-        api_key: Alpaca API key.
-        api_secret: Alpaca API secret.
+    """从Alpaca获取加密货币数据
+    
+    参数:
+        api_key: Alpaca API密钥
+        api_secret: Alpaca API密钥
     """
 
-    TRADE_COUNT: Final = "trade_count"
-    COLUMNS: Final = (
+    TRADE_COUNT: Final = "trade_count"  # 交易次数列名
+    COLUMNS: Final = (  # 列名列表
         DataCol.SYMBOL.value,
         DataCol.DATE.value,
         DataCol.OPEN.value,
@@ -407,35 +413,63 @@ class AlpacaCrypto(DataSource):
         TRADE_COUNT,
     )
 
-    __EST: Final = "US/Eastern"
+    __EST: Final = "US/Eastern"  # 东部标准时间时区
 
     def __init__(self, api_key: str, api_secret: str):
+        """初始化AlpacaCrypto数据源
+        
+        参数:
+            api_key: Alpaca API密钥
+            api_secret: Alpaca API密钥
+        """
         super().__init__()
-        self._scope.register_custom_cols(self.TRADE_COUNT)
-        self._api = alpaca_crypto.CryptoHistoricalDataClient(
+        self._crypto_client = alpaca_crypto.CryptoHistoricalDataClient(
             api_key, api_secret
         )
 
     def query(
         self,
-        symbols: Union[str, Iterable[str]],
-        start_date: Union[str, datetime],
-        end_date: Union[str, datetime],
-        timeframe: Optional[str] = "1d",
-        _adjust: Optional[str] = None,
+        symbols: Union[str, Iterable[str]],  # 加密货币代码
+        start_date: Union[str, datetime],  # 开始日期
+        end_date: Union[str, datetime],  # 结束日期
+        timeframe: Optional[str] = "1d",  # 时间框架，默认为1天
+        _adjust: Optional[str] = None,  # 不适用于加密货币
     ) -> pd.DataFrame:
+        """查询Alpaca加密货币数据
+        
+        参数:
+            symbols: 要查询的加密货币代码
+            start_date: 开始日期(包含)
+            end_date: 结束日期(包含)
+            timeframe: 时间框架，默认为"1d"(一天)
+            _adjust: 不适用于加密货币，但为了保持接口一致性而保留
+            
+        返回:
+            包含查询加密货币数据的DataFrame
+        """
         _parse_alpaca_timeframe(timeframe)
         return super().query(symbols, start_date, end_date, timeframe, _adjust)
 
     def _fetch_data(
         self,
-        symbols: frozenset[str],
-        start_date: datetime,
-        end_date: datetime,
-        timeframe: Optional[str],
-        _adjust: Optional[str],
+        symbols: frozenset[str],  # 加密货币代码集合
+        start_date: datetime,  # 开始日期
+        end_date: datetime,  # 结束日期
+        timeframe: Optional[str],  # 时间框架
+        _adjust: Optional[str],  # 不适用于加密货币
     ) -> pd.DataFrame:
-        """:meta private:"""
+        """从Alpaca获取加密货币数据
+        
+        参数:
+            symbols: 要获取的加密货币代码冻结集合
+            start_date: 开始日期(包含)
+            end_date: 结束日期(包含)
+            timeframe: 时间框架
+            _adjust: 不适用于加密货币
+            
+        返回:
+            包含获取加密货币数据的DataFrame
+        """
         amount, unit = _parse_alpaca_timeframe(timeframe)
         request = CryptoBarsRequest(
             symbol_or_symbols=list(symbols),
@@ -444,7 +478,7 @@ class AlpacaCrypto(DataSource):
             timeframe=TimeFrame(amount, unit),
             limit=None,
         )
-        df = self._api.get_crypto_bars(request).df  # type: ignore[union-attr]
+        df = self._crypto_client.get_crypto_bars(request).df  # type: ignore[union-attr]
         if df.columns.empty:
             return pd.DataFrame(columns=self.COLUMNS)
         if df.empty:
@@ -460,43 +494,48 @@ class AlpacaCrypto(DataSource):
 
 
 class YFinance(DataSource):
-    r"""Retrieves data from `Yahoo Finance <https://finance.yahoo.com/>`_\ .
-
-    Args:
-        auto_adjust: Whether to auto adjust close prices. If ``True``, then
-            adjusted close prices are stored in the ``close`` column. Defaults
-            to ``False``.
-
-    Attributes:
-        ADJ_CLOSE: Column name of adjusted close prices.
+    r"""从Yahoo Finance获取数据
+    
+    参数:
+        auto_adjust: 是否自动调整收盘价。如果为True，则调整后的收盘价存储在close列中。
+                    默认为False
+        
+    属性:
+        ADJ_CLOSE: 调整后收盘价的列名
     """
 
-    ADJ_CLOSE: Final = "adj_close"
-    __TIMEFRAME: Final = "1d"
+    ADJ_CLOSE: Final = "adj_close"  # 调整后收盘价列名
+    __TIMEFRAME: Final = "1d"  # 固定的时间框架为1天
 
     def __init__(self, auto_adjust: bool = False):
+        """初始化YFinance数据源
+        
+        参数:
+            auto_adjust: 是否自动调整收盘价，默认为False
+        """
         super().__init__()
-        self.auto_adjust = auto_adjust
+        self._auto_adjust = auto_adjust
         self._scope.register_custom_cols(self.ADJ_CLOSE)
 
     def query(
         self,
-        symbols: Union[str, Iterable[str]],
-        start_date: Union[str, datetime],
-        end_date: Union[str, datetime],
-        _timeframe: Optional[str] = "",
-        _adjust: Optional[Any] = None,
+        symbols: Union[str, Iterable[str]],  # 股票代码
+        start_date: Union[str, datetime],  # 开始日期
+        end_date: Union[str, datetime],  # 结束日期
+        _timeframe: Optional[str] = "",  # 不适用于Yahoo Finance
+        _adjust: Optional[Any] = None,  # 不适用于Yahoo Finance
     ) -> pd.DataFrame:
-        r"""Queries data from `Yahoo Finance <https://finance.yahoo.com/>`_\ .
-        The timeframe of the data is limited to per day only.
-
-        Args:
-            symbols: Ticker symbols of the data to query.
-            start_date: Start date of the data to query (inclusive).
-            end_date: End date of the data to query (inclusive).
-
-        Returns:
-            :class:`pandas.DataFrame` containing the queried data.
+        """查询Yahoo Finance数据
+        
+        参数:
+            symbols: 要查询的股票代码
+            start_date: 开始日期(包含)
+            end_date: 结束日期(包含)
+            _timeframe: 不适用于Yahoo Finance，但为了保持接口一致性而保留
+            _adjust: 不适用于Yahoo Finance，但为了保持接口一致性而保留
+            
+        返回:
+            包含查询股票数据的DataFrame
         """
         return super().query(
             symbols, start_date, end_date, self.__TIMEFRAME, _adjust
@@ -504,13 +543,24 @@ class YFinance(DataSource):
 
     def _fetch_data(
         self,
-        symbols: frozenset[str],
-        start_date: datetime,
-        end_date: datetime,
-        _timeframe: Optional[str],
-        _adjust: Optional[Any],
+        symbols: frozenset[str],  # 股票代码集合
+        start_date: datetime,  # 开始日期
+        end_date: datetime,  # 结束日期
+        _timeframe: Optional[str],  # 不适用于Yahoo Finance
+        _adjust: Optional[Any],  # 不适用于Yahoo Finance
     ) -> pd.DataFrame:
-        """:meta private:"""
+        """从Yahoo Finance获取股票数据
+        
+        参数:
+            symbols: 要获取的股票代码冻结集合
+            start_date: 开始日期(包含)
+            end_date: 结束日期(包含)
+            _timeframe: 不适用于Yahoo Finance
+            _adjust: 不适用于Yahoo Finance
+            
+        返回:
+            包含获取股票数据的DataFrame
+        """
         show_yf_progress_bar = (
             not self._logger._disabled
             and not self._logger._progress_bar_disabled
@@ -520,7 +570,7 @@ class YFinance(DataSource):
             start=start_date,
             end=end_date,
             progress=show_yf_progress_bar,
-            auto_adjust=self.auto_adjust,
+            auto_adjust=self._auto_adjust,
         )
         if df.columns.empty:
             columns = [
@@ -532,7 +582,7 @@ class YFinance(DataSource):
                 DataCol.CLOSE.value,
                 DataCol.VOLUME.value,
             ]
-            if not self.auto_adjust:
+            if not self._auto_adjust:
                 columns.append(self.ADJ_CLOSE)
             return pd.DataFrame(columns=columns)
         if df.empty:
@@ -549,7 +599,7 @@ class YFinance(DataSource):
             result[DataCol.LOW.value] = df["Low"].values
             result[DataCol.CLOSE.value] = df["Close"].values
             result[DataCol.VOLUME.value] = df["Volume"].values
-            if not self.auto_adjust:
+            if not self._auto_adjust:
                 result[self.ADJ_CLOSE] = df["Adj Close"].values
         else:
             df.columns = df.columns.to_flat_index()
@@ -564,7 +614,13 @@ class YFinance(DataSource):
                 sym_df[DataCol.LOW.value] = df[("Low", sym)].values
                 sym_df[DataCol.CLOSE.value] = df[("Close", sym)].values
                 sym_df[DataCol.VOLUME.value] = df[("Volume", sym)].values
-                if not self.auto_adjust:
+                if not self._auto_adjust:
                     sym_df[self.ADJ_CLOSE] = df[("Adj Close", sym)].values
                 result = pd.concat((result, sym_df))
         return result
+
+# 该模块提供了PyBroker的数据获取功能，支持从多种数据源获取行情数据。
+# 核心类DataSource是所有数据源的基类，定义了数据查询的标准接口。
+# 内置支持多种数据源：Alpaca股票数据、Alpaca加密货币数据和Yahoo Finance数据。
+# 提供了数据缓存机制，通过DataSourceCacheMixin实现，可以避免重复获取相同的数据。
+# 用户可以通过继承DataSource类实现自定义数据源，以支持更多的数据提供商。

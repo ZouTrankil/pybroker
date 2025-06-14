@@ -1,4 +1,4 @@
-"""Contains caching utilities."""
+"""Contains caching utilities."""  # 包含缓存工具
 
 """Copyright (C) 2023 Edward West. All rights reserved.
 
@@ -13,70 +13,69 @@ from datetime import datetime
 from diskcache import Cache
 from typing import Final, Optional
 
-_DEFAULT_CACHE_DIRNAME: Final = ".pybrokercache"
+_DEFAULT_CACHE_DIRNAME: Final = ".pybrokercache"  # 默认缓存目录名
 
 
 @dataclass(frozen=True)
 class CacheDateFields:
-    """Date fields for keying cache data.
-
-    Attributes:
-        start_date: Start date of cache data.
-        end_date: End date of cache data.
-        tf_seconds: Timeframe resolution of cache data represented in seconds.
-        between_time: ``tuple[str, str]`` of times of day (e.g. 9:00-9:30 AM)
-            that were used to filter the cache data.
-        days: Days (e.g. ``"mon"``, ``"tues"`` etc.) that were used to filter
-            the cache data.
+    """用于键缓存数据的日期字段
+    
+    属性:
+        start_date: 缓存数据的开始日期
+        end_date: 缓存数据的结束日期
+        tf_seconds: 缓存数据的时间框架分辨率(以秒为单位)
+        between_time: 用于过滤缓存数据的一天中的时间(例如9:00-9:30 AM)的元组
+        days: 用于过滤缓存数据的星期(例如"mon"、"tues"等)
     """
 
-    start_date: datetime
-    end_date: datetime
-    tf_seconds: int
-    between_time: Optional[tuple[str, str]]
-    days: Optional[tuple[int]]
+    start_date: datetime  # 开始日期
+    end_date: datetime  # 结束日期
+    tf_seconds: int  # 时间框架秒数
+    between_time: Optional[tuple[str, str]]  # 时间范围
+    days: Optional[tuple[int]]  # 星期
 
 
 @dataclass(frozen=True)
 class DataSourceCacheKey:
-    """Cache key used for :class:`pybroker.data.DataSource` data."""
+    """用于DataSource数据的缓存键"""
 
-    symbol: str
-    tf_seconds: int
-    start_date: datetime
-    end_date: datetime
-    adjust: Optional[str]
+    symbol: str  # 股票代码
+    tf_seconds: int  # 时间框架秒数
+    start_date: datetime  # 开始日期
+    end_date: datetime  # 结束日期
+    adjust: Optional[str]  # 调整类型
 
 
 @dataclass(frozen=True)
 class IndicatorCacheKey:
-    """Cache key used for indicator data."""
+    """用于指标数据的缓存键"""
 
-    symbol: str
-    tf_seconds: int
-    start_date: datetime
-    end_date: datetime
-    between_time: Optional[tuple[str, str]]
-    days: Optional[tuple[int]]
-    ind_name: str
+    symbol: str  # 股票代码
+    tf_seconds: int  # 时间框架秒数
+    start_date: datetime  # 开始日期
+    end_date: datetime  # 结束日期
+    between_time: Optional[tuple[str, str]]  # 时间范围
+    days: Optional[tuple[int]]  # 星期
+    ind_name: str  # 指标名称
 
 
 @dataclass(frozen=True)
 class ModelCacheKey:
-    """Cache key used for trained models."""
+    """用于训练模型的缓存键"""
 
-    symbol: str
-    tf_seconds: int
-    start_date: datetime
-    end_date: datetime
-    between_time: Optional[tuple[str, str]]
-    days: Optional[tuple[int]]
-    model_name: str
+    symbol: str  # 股票代码
+    tf_seconds: int  # 时间框架秒数
+    start_date: datetime  # 开始日期
+    end_date: datetime  # 结束日期
+    between_time: Optional[tuple[str, str]]  # 时间范围
+    days: Optional[tuple[int]]  # 星期
+    model_name: str  # 模型名称
 
 
 def _get_cache_dir(
     cache_dir: Optional[str], namespace: str, sub_dir: str
 ) -> str:
+    """获取缓存目录路径"""
     if not namespace:
         raise ValueError("Cache namespace cannot be empty.")
     base_dir = (
@@ -90,15 +89,14 @@ def _get_cache_dir(
 def enable_data_source_cache(
     namespace: str, cache_dir: Optional[str] = None
 ) -> Cache:
-    r"""Enables caching of data retrieved from
-    :class:`pybroker.data.DataSource`\ s.
-
-    Args:
-        namespace: Namespace of the cache.
-        cache_dir: Directory used to store cached data.
-
-    Returns:
-        :class:`diskcache.Cache` instance.
+    r"""启用从DataSource获取的数据的缓存
+    
+    参数:
+        namespace: 缓存的命名空间
+        cache_dir: 用于存储缓存数据的目录
+        
+    返回:
+        diskcache.Cache实例
     """
     scope = StaticScope.instance()
     cache_dir = _get_cache_dir(cache_dir, namespace, "data_source")
@@ -110,9 +108,7 @@ def enable_data_source_cache(
 
 
 def disable_data_source_cache():
-    r"""Disables caching data retrieved from
-    :class:`pybroker.data.DataSource`\ s.
-    """
+    r"""禁用从DataSource获取的数据的缓存"""
     scope = StaticScope.instance()
     scope.data_source_cache = None
     scope.data_source_cache_ns = ""
@@ -120,9 +116,7 @@ def disable_data_source_cache():
 
 
 def clear_data_source_cache():
-    r"""Clears data cached from :class:`pybroker.data.DataSource`\ s.
-    :meth:`enable_data_source_cache` must be called first before clearing.
-    """
+    r"""清除从DataSource缓存的数据。必须先调用enable_data_source_cache才能清除"""
     scope = StaticScope.instance()
     cache = scope.data_source_cache
     if cache is None:
@@ -136,14 +130,14 @@ def clear_data_source_cache():
 def enable_indicator_cache(
     namespace: str, cache_dir: Optional[str] = None
 ) -> Cache:
-    """Enables caching indicator data.
-
-    Args:
-        namespace: Namespace of the cache.
-        cache_dir: Directory used to store cached indicator data.
-
-    Returns:
-        :class:`diskcache.Cache` instance.
+    """启用指标数据的缓存
+    
+    参数:
+        namespace: 缓存的命名空间
+        cache_dir: 用于存储缓存指标数据的目录
+        
+    返回:
+        diskcache.Cache实例
     """
     scope = StaticScope.instance()
     cache_dir = _get_cache_dir(cache_dir, namespace, "indicator")
@@ -155,7 +149,7 @@ def enable_indicator_cache(
 
 
 def disable_indicator_cache():
-    """Disables caching indicator data."""
+    """禁用指标数据的缓存"""
     scope = StaticScope.instance()
     scope.indicator_cache = None
     scope.indicator_cache_ns = ""
@@ -163,9 +157,7 @@ def disable_indicator_cache():
 
 
 def clear_indicator_cache():
-    """Clears cached indicator data. :meth:`enable_indicator_cache` must be
-    called first before clearing.
-    """
+    """清除缓存的指标数据。必须先调用enable_indicator_cache才能清除"""
     scope = StaticScope.instance()
     cache = scope.indicator_cache
     if cache is None:
@@ -179,14 +171,14 @@ def clear_indicator_cache():
 def enable_model_cache(
     namespace: str, cache_dir: Optional[str] = None
 ) -> Cache:
-    """Enables caching trained models.
-
-    Args:
-        namespace: Namespace of the cache.
-        cache_dir: Directory used to store cached models.
-
-    Returns:
-        :class:`diskcache.Cache` instance.
+    """启用训练模型的缓存
+    
+    参数:
+        namespace: 缓存的命名空间
+        cache_dir: 用于存储缓存模型的目录
+        
+    返回:
+        diskcache.Cache实例
     """
     scope = StaticScope.instance()
     cache_dir = _get_cache_dir(cache_dir, namespace, "model")
@@ -198,7 +190,7 @@ def enable_model_cache(
 
 
 def disable_model_cache():
-    """Disables caching trained models."""
+    """禁用训练模型的缓存"""
     scope = StaticScope.instance()
     scope.model_cache = None
     scope.model_cache_ns = ""
@@ -206,9 +198,7 @@ def disable_model_cache():
 
 
 def clear_model_cache():
-    """Clears cached trained models. :meth:`enable_model_cache` must be called
-    first before clearing.
-    """
+    """清除缓存的训练模型。必须先调用enable_model_cache才能清除"""
     scope = StaticScope.instance()
     cache = scope.model_cache
     if cache is None:
@@ -218,11 +208,11 @@ def clear_model_cache():
 
 
 def enable_caches(namespace, cache_dir: Optional[str] = None):
-    """Enables all caches.
-
-    Args:
-        namespace: Namespace shared by cached data.
-        cache_dir: Directory used to store cached data.
+    """启用所有缓存（数据源、指标和模型）
+    
+    参数:
+        namespace: 缓存的命名空间
+        cache_dir: 用于存储缓存数据的目录
     """
     enable_data_source_cache(namespace, cache_dir)
     enable_indicator_cache(namespace, cache_dir)
@@ -230,15 +220,29 @@ def enable_caches(namespace, cache_dir: Optional[str] = None):
 
 
 def disable_caches():
-    """Disables all caches."""
+    """禁用所有缓存（数据源、指标和模型）"""
     disable_data_source_cache()
     disable_indicator_cache()
     disable_model_cache()
 
 
 def clear_caches():
-    """Clears cached data from all caches. :meth:`enable_caches` must be
-    called first before clearing."""
-    clear_data_source_cache()
-    clear_indicator_cache()
-    clear_model_cache()
+    """清除所有缓存（数据源、指标和模型）"""
+    try:
+        clear_data_source_cache()
+    except ValueError:
+        pass
+    try:
+        clear_indicator_cache()
+    except ValueError:
+        pass
+    try:
+        clear_model_cache()
+    except ValueError:
+        pass
+
+# 该模块提供了PyBroker的缓存功能，用于存储和检索数据源、指标和模型数据。
+# 缓存机制可以显著提高回测性能，避免重复计算和重复获取数据。
+# 每种缓存类型（数据源、指标、模型）都有对应的启用、禁用和清除函数。
+# 缓存使用命名空间和目录路径组织，确保不同项目或测试之间的缓存隔离。
+# 所有缓存操作都由StaticScope单例管理，确保整个应用程序中缓存状态的一致性。

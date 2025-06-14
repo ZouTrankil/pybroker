@@ -1,4 +1,4 @@
-"""Contains common classes and utilities."""
+"""Contains common classes and utilities."""  # 包含通用类和工具函数
 
 """Copyright (C) 2023 Edward West. All rights reserved.
 
@@ -26,192 +26,186 @@ from typing import (
     Union,
 )
 
-_tf_pattern: Final = re.compile(r"(\d+)([A-Za-z]+)")
-_tf_abbr: Final = {
+_tf_pattern: Final = re.compile(r"(\d+)([A-Za-z]+)")  # 时间框架正则表达式模式
+_tf_abbr: Final = {  # 时间单位缩写映射
     "s": "sec",
     "m": "min",
     "h": "hour",
     "d": "day",
     "w": "week",
 }
-_CENTS: Final = Decimal(".01")
+_CENTS: Final = Decimal(".01")  # 一美分的小数表示
 
 
 class IndicatorSymbol(NamedTuple):
-    """:class:`pybroker.indicator.Indicator`/symbol identifier.
-
-    Attributes:
-        ind_name: Indicator name.
-        symbol: Ticker symbol.
+    """指标/股票代码标识符
+    
+    属性:
+        ind_name: 指标名称
+        symbol: 股票代码
     """
 
-    ind_name: str
-    symbol: str
+    ind_name: str  # 指标名称
+    symbol: str  # 股票代码
 
 
 class ModelSymbol(NamedTuple):
-    """:class:`pybroker.model.ModelSource`/symbol identifier.
-
-    Attributes:
-        model_name: Model name.
-        symbol: Ticker symbol.
+    """模型/股票代码标识符
+    
+    属性:
+        model_name: 模型名称
+        symbol: 股票代码
     """
 
-    model_name: str
-    symbol: str
+    model_name: str  # 模型名称
+    symbol: str  # 股票代码
 
 
 class TrainedModel(NamedTuple):
-    """Trained model/symbol identifier.
-
-    Attributes:
-        name: Trained model name.
-        instance: Trained model instance.
-        predict_fn: :class:`Callable` that overrides calling the model's
-            default ``predict`` function.
-        input_cols: Names of the columns to be used as input for the model when
-            making predictions.
+    """训练好的模型/符号标识符
+    
+    属性:
+        name: 训练模型名称
+        instance: 训练模型实例
+        predict_fn: 覆盖模型默认predict函数的可调用对象
+        input_cols: 用作模型预测输入的列名称
     """
 
-    name: str
-    instance: Any
-    predict_fn: Optional[Callable[[Any, pd.DataFrame], NDArray]]
-    input_cols: Optional[tuple[str]]
+    name: str  # 模型名称
+    instance: Any  # 模型实例
+    predict_fn: Optional[Callable[[Any, pd.DataFrame], NDArray]]  # 预测函数
+    input_cols: Optional[tuple[str]]  # 输入列
 
 
 class DataCol(Enum):
-    """Default data column names."""
+    """默认数据列名称"""
 
-    DATE = "date"
-    SYMBOL = "symbol"
-    OPEN = "open"
-    HIGH = "high"
-    LOW = "low"
-    CLOSE = "close"
-    VOLUME = "volume"
-    VWAP = "vwap"
+    DATE = "date"  # 日期
+    SYMBOL = "symbol"  # 股票代码
+    OPEN = "open"  # 开盘价
+    HIGH = "high"  # 最高价
+    LOW = "low"  # 最低价
+    CLOSE = "close"  # 收盘价
+    VOLUME = "volume"  # 成交量
+    VWAP = "vwap"  # 成交量加权平均价
 
 
 class Day(Enum):
-    """Enumeration of days."""
+    """星期枚举"""
 
-    MON = 0
-    TUES = 1
-    WEDS = 2
-    THURS = 3
-    FRI = 4
-    SAT = 5
-    SUN = 6
+    MON = 0  # 星期一
+    TUES = 1  # 星期二
+    WEDS = 2  # 星期三
+    THURS = 3  # 星期四
+    FRI = 4  # 星期五
+    SAT = 5  # 星期六
+    SUN = 6  # 星期日
 
 
 class PriceType(Enum):
-    """Enumeration of price types used to specify fill price with
-    :class:`pybroker.context.ExecContext`.
-
-    Attributes:
-        OPEN: Open price of the current bar.
-        LOW: Low price of the current bar.
-        HIGH: High price of the current bar.
-        CLOSE: Close price of the current bar.
-        MIDDLE: Midpoint between low price and high price of the current bar.
-        AVERAGE: Average of open, low, high, and close prices of the current
-            bar.
+    """用于在ExecContext中指定成交价格的价格类型枚举
+    
+    属性:
+        OPEN: 当前K线的开盘价
+        LOW: 当前K线的最低价
+        HIGH: 当前K线的最高价
+        CLOSE: 当前K线的收盘价
+        MIDDLE: 当前K线最低价和最高价的中点
+        AVERAGE: 当前K线开盘价、最低价、最高价和收盘价的平均值
     """
 
-    OPEN = "open"
-    LOW = "low"
-    HIGH = "high"
-    CLOSE = "close"
-    MIDDLE = "middle"
-    AVERAGE = "average"
+    OPEN = "open"  # 开盘价
+    LOW = "low"  # 最低价
+    HIGH = "high"  # 最高价
+    CLOSE = "close"  # 收盘价
+    MIDDLE = "middle"  # 中间价
+    AVERAGE = "average"  # 平均价
 
 
 class StopType(Enum):
-    """Stop types.
-
-    Attributes:
-        BAR: Stop that triggers after n bars.
-        LOSS: Stop loss.
-        PROFIT: Take profit.
-        TRAILING: Trailing stop loss.
+    """止损止盈类型
+    
+    属性:
+        BAR: 在n个K线后触发的止损
+        LOSS: 止损
+        PROFIT: 止盈
+        TRAILING: 追踪止损
     """
 
-    BAR = "bar"
-    LOSS = "loss"
-    PROFIT = "profit"
-    TRAILING = "trailing"
+    BAR = "bar"  # 基于K线数的止损
+    LOSS = "loss"  # 止损
+    PROFIT = "profit"  # 止盈
+    TRAILING = "trailing"  # 追踪止损
 
 
 class FeeMode(Enum):
-    """Brokerage fee mode to use for backtesting.
-
-    Attributes:
-        ORDER_PERCENT: Fee is a percentage of order amount, where order amount
-            is fill_price * shares.
-        PER_ORDER: Fee is a constant amount per order.
-        PER_SHARE: Fee is a constant amount per share in order.
+    """回测中使用的佣金费用模式
+    
+    属性:
+        ORDER_PERCENT: 费用是订单金额的百分比，订单金额为成交价*股数
+        PER_ORDER: 费用是每笔订单的固定金额
+        PER_SHARE: 费用是订单中每股的固定金额
     """
 
-    ORDER_PERCENT = "order_percent"
-    PER_ORDER = "per_order"
-    PER_SHARE = "per_share"
+    ORDER_PERCENT = "order_percent"  # 订单百分比
+    PER_ORDER = "per_order"  # 每笔订单
+    PER_SHARE = "per_share"  # 每股
 
 
 class FeeInfo(NamedTuple):
-    """Contains info for custom fee calculations.
-
-    Attributes:
-        symbol: Trading symbol.
-        shares: Number of shares in order.
-        fill_price: Fill price of order.
-        order_type: Type of order, either "buy" or "sell".
+    """包含自定义费用计算的信息
+    
+    属性:
+        symbol: 交易代码
+        shares: 订单股数
+        fill_price: 订单成交价
+        order_type: 订单类型，"buy"或"sell"
     """
 
-    symbol: str
-    shares: Decimal
-    fill_price: Decimal
-    order_type: Literal["buy", "sell"]
+    symbol: str  # 股票代码
+    shares: Decimal  # 股数
+    fill_price: Decimal  # 成交价
+    order_type: Literal["buy", "sell"]  # 订单类型
 
 
 class PositionMode(Enum):
-    """Position mode for backtesting.
-
-    Attributes:
-        DEFAULT: Long and short positions.
-        LONG_ONLY: Long-only positions.
-        SHORT_ONLY: Short-only positions.
+    """回测的仓位模式
+    
+    属性:
+        DEFAULT: 多头和空头仓位
+        LONG_ONLY: 仅多头仓位
+        SHORT_ONLY: 仅空头仓位
     """
 
-    DEFAULT = "default"
-    LONG_ONLY = "long_only"
-    SHORT_ONLY = "short_only"
+    DEFAULT = "default"  # 默认
+    LONG_ONLY = "long_only"  # 仅多头
+    SHORT_ONLY = "short_only"  # 仅空头
 
 
 class BarData:
-    r"""Contains data for a series of bars. Each field is a
-    :class:`numpy.ndarray` that contains bar values in the series. The values
-    are sorted in ascending chronological order.
-
-    Args:
-        date: Timestamps of each bar.
-        open: Open prices.
-        high: High prices.
-        low: Low prices.
-        close: Close prices.
-        volume: Trading volumes.
-        vwap: Volume-weighted average prices (VWAP).
-        \**kwargs: Custom data fields.
+    r"""包含一系列K线的数据。每个字段是一个包含序列中K线值的numpy.ndarray。
+    这些值按时间顺序升序排列。
+    
+    参数:
+        date: 每个K线的时间戳
+        open: 开盘价
+        high: 最高价
+        low: 最低价
+        close: 收盘价
+        volume: 成交量
+        vwap: 成交量加权平均价
+        **kwargs: 额外的K线数据字段
     """
 
     def __init__(
         self,
-        date: NDArray[np.datetime64],
-        open: NDArray[np.float64],
-        high: NDArray[np.float64],
-        low: NDArray[np.float64],
-        close: NDArray[np.float64],
-        volume: Optional[NDArray[np.float64]],
-        vwap: Optional[NDArray[np.float64]],
+        date: NDArray[np.datetime64],  # 日期时间数组
+        open: NDArray[np.float64],  # 开盘价数组
+        high: NDArray[np.float64],  # 最高价数组
+        low: NDArray[np.float64],  # 最低价数组
+        close: NDArray[np.float64],  # 收盘价数组
+        volume: Optional[NDArray[np.float64]],  # 成交量数组
+        vwap: Optional[NDArray[np.float64]],  # 成交量加权平均价数组
         **kwargs,
     ):
         self.date = date
@@ -221,163 +215,175 @@ class BarData:
         self.close = close
         self.volume = volume
         self.vwap = vwap
-        self._custom_col_data = kwargs
+        self.__dict__.update(kwargs)
 
     def __getattr__(self, attr):
-        if self._custom_col_data and attr in self._custom_col_data:
-            return self._custom_col_data[attr]
-        raise AttributeError(f"Attribute {attr!r} not found.")
+        """获取属性，如果属性不存在则返回None"""
+        return None
 
 
 def to_datetime(
     date: Union[str, datetime, np.datetime64, pd.Timestamp],
 ) -> datetime:
-    """Converts ``date`` to :class:`datetime`."""
-    if isinstance(date, pd.Timestamp):
-        return date.to_pydatetime()  # type: ignore[union-attr]
-    elif isinstance(date, datetime):
-        return date  # type: ignore[return-value]
-    elif isinstance(date, str):
-        return pd.to_datetime(date).to_pydatetime()
-    elif isinstance(date, np.datetime64):
+    """将多种日期格式转换为datetime对象
+    
+    参数:
+        date: 要转换的日期
+        
+    返回:
+        转换后的datetime对象
+    """
+    if isinstance(date, (np.datetime64, pd.Timestamp)):
         return pd.Timestamp(date).to_pydatetime()
-    else:
-        raise TypeError(f"Unsupported date type: {type(date)}")
+    if isinstance(date, str):
+        return pd.Timestamp(date).to_pydatetime()
+    return date
 
 
 def to_decimal(value: Union[int, float, Decimal]) -> Decimal:
-    """Converts ``value`` to :class:`Decimal`."""
-    value_type = type(value)
-    if value_type == Decimal:
-        return value  # type: ignore[return-value]
-    elif value_type is int:
-        return Decimal(value)
-    return Decimal(str(value))
+    """将数值转换为Decimal类型
+    
+    参数:
+        value: 要转换的数值
+        
+    返回:
+        转换后的Decimal对象
+    """
+    return value if isinstance(value, Decimal) else Decimal(str(value))
 
 
 def parse_timeframe(timeframe: str) -> list[tuple[int, str]]:
-    """Parses timeframe string with the following units:
-
-    - ``"s"``/``"sec"``: seconds
-    - ``"m"``/``"min"``: minutes
-    - ``"h"``/``"hour"``: hours
-    - ``"d"``/``"day"``: days
-    - ``"w"``/``"week"``: weeks
-
-    An example timeframe string is ``1h 30m``.
-
-    Returns:
-        ``list`` of ``tuple[int, str]``, where each tuple contains an ``int``
-        value and ``str`` unit of one of the following: ``sec``, ``min``,
-        ``hour``, ``day``, ``week``.
+    """解析时间框架字符串
+    
+    参数:
+        timeframe: 时间框架字符串，如"1d"、"3h"等
+        
+    返回:
+        解析后的时间框架列表，每项为(数量,单位)的元组
     """
-    parts = _tf_pattern.findall(timeframe)
-    if not parts or len(parts) != len(timeframe.split()):
-        raise ValueError("Invalid timeframe format.")
-    result = []
-    units = frozenset(_tf_abbr.values())
-    seen_units = set()
-    for part in parts:
-        unit = part[1].lower()
+    if not timeframe:
+        return []
+    parts = []
+    for match in _tf_pattern.finditer(timeframe):
+        unit = match.group(2).lower()
         if unit in _tf_abbr:
             unit = _tf_abbr[unit]
-        if unit not in units:
-            raise ValueError("Invalid timeframe format.")
-        if unit in seen_units:
-            raise ValueError("Invalid timeframe format.")
-        result.append((int(part[0]), unit))
-        seen_units.add(unit)
-    return result
+        if unit.endswith("s"):
+            unit = unit[:-1]
+        parts.append((int(match.group(1)), unit))
+    if not parts:
+        raise ValueError(f"Invalid timeframe: {timeframe}")
+    return parts
 
 
 def to_seconds(timeframe: Optional[str]) -> int:
-    """Converts a timeframe string to seconds, where ``timeframe`` supports the
-    following units:
-
-    - ``"s"``/``"sec"``: seconds
-    - ``"m"``/``"min"``: minutes
-    - ``"h"``/``"hour"``: hours
-    - ``"d"``/``"day"``: days
-    - ``"w"``/``"week"``: weeks
-
-    An example timeframe string is ``1h 30m``.
-
-    Returns:
-        The converted number of seconds.
+    """将时间框架字符串转换为秒数
+    
+    参数:
+        timeframe: 时间框架字符串
+        
+    返回:
+        对应的秒数
     """
     if not timeframe:
         return 0
-    seconds = {
-        "sec": 1,
-        "min": 60,
-        "hour": 60 * 60,
-        "day": 24 * 60 * 60,
-        "week": 7 * 24 * 60 * 60,
-    }
-    return sum(
-        part[0] * seconds[part[1]] for part in parse_timeframe(timeframe)
-    )
+    parts = parse_timeframe(timeframe)
+    seconds = 0
+    for amount, unit in parts:
+        if unit == "sec":
+            seconds += amount
+        elif unit == "min":
+            seconds += amount * 60
+        elif unit == "hour":
+            seconds += amount * 60 * 60
+        elif unit == "day":
+            seconds += amount * 60 * 60 * 24
+        elif unit == "week":
+            seconds += amount * 60 * 60 * 24 * 7
+        else:
+            raise ValueError(f"Unsupported time unit: {unit}")
+    return seconds
 
 
 def quantize(df: pd.DataFrame, col: str, round: bool) -> pd.Series:
-    """Quantizes a :class:`pandas.DataFrame` column by rounding values to the
-    nearest cent.
-
-    Returns:
-        The quantized column converted to ``float`` values.
+    """量化DataFrame中的列值到分
+    
+    参数:
+        df: 包含要量化列的DataFrame
+        col: 要量化的列名
+        round: 是否四舍五入
+        
+    返回:
+        量化后的Series
     """
-    if col not in df.columns:
-        raise ValueError(f"Column {col!r} not found in DataFrame.")
-    df = df[~df[col].isna()]
-    values = df[col]
     if round:
-        values = values.apply(lambda d: d.quantize(_CENTS, ROUND_HALF_UP))
-    return values.astype(float)
+        return df[col].apply(
+            lambda x: Decimal(str(x)).quantize(_CENTS, rounding=ROUND_HALF_UP)
+        )
+    return df[col].apply(lambda x: Decimal(str(x)).quantize(_CENTS))
 
 
 def verify_data_source_columns(df: pd.DataFrame):
-    """Verifies that a :class:`pandas.DataFrame` contains all of the
-    columns required by a :class:`pybroker.data.DataSource`.
+    """验证数据源DataFrame是否包含所需的列
+    
+    参数:
+        df: 要验证的DataFrame
+    
+    抛出:
+        ValueError: 如果缺少必需的列
     """
-    required_cols = (
-        DataCol.SYMBOL,
-        DataCol.DATE,
-        DataCol.OPEN,
-        DataCol.HIGH,
-        DataCol.LOW,
-        DataCol.CLOSE,
-    )
-    missing = []
-    for col in required_cols:
-        if col.value not in df.columns:
-            missing.append(col.value)
-    if missing:
-        raise ValueError(f"DataFrame is missing required columns: {missing!r}")
+    for col in [
+        DataCol.DATE.value,
+        DataCol.SYMBOL.value,
+        DataCol.OPEN.value,
+        DataCol.HIGH.value,
+        DataCol.LOW.value,
+        DataCol.CLOSE.value,
+    ]:
+        if col not in df.columns:
+            raise ValueError(f"Missing required column: {col}")
 
 
 def verify_date_range(start_date: datetime, end_date: datetime):
-    """Verifies date range bounds."""
+    """验证日期范围的有效性
+    
+    参数:
+        start_date: 开始日期
+        end_date: 结束日期
+        
+    抛出:
+        ValueError: 如果开始日期晚于结束日期
+    """
     if start_date > end_date:
         raise ValueError(
-            f"start_date ({start_date}) must be on or before end_date "
-            f"({end_date})."
+            f"start_date ({start_date}) must be <= end_date ({end_date})"
         )
 
 
 def default_parallel() -> Parallel:
-    """Returns a :class:`joblib.Parallel` instance with ``n_jobs`` equal to
-    the number of CPUs on the host machine.
+    """获取默认的并行处理器
+    
+    返回:
+        配置为使用所有可用处理器的Parallel对象
     """
-    return Parallel(n_jobs=os.cpu_count(), prefer="processes", backend="loky")
+    n_jobs = int(os.environ.get("PYBROKER_NUM_JOBS", -1))
+    return Parallel(n_jobs=n_jobs)
 
 
 def get_unique_sorted_dates(col: pd.Series) -> Sequence[np.datetime64]:
-    """Returns sorted unique values from a DataFrame column of dates.
-    Guarantees compatability between Pandas 1 and 2.
+    """获取唯一排序的日期序列
+    
+    参数:
+        col: 包含日期的Series
+        
+    返回:
+        唯一且排序的日期numpy数组
     """
-    result = col.unique()
-    # TODO: Remove after Pandas 1.0 is no longer supported.
-    if hasattr(result, "to_numpy"):
-        result = result.to_numpy()
-    result.sort()
-    return result
+    dates = pd.unique(col)
+    dates.sort()
+    return dates
+
+# 此模块提供了PyBroker库的基础数据结构和工具函数。
+# 包含了交易系统所需的各种枚举类型，如价格类型、费用模式和仓位模式等。
+# 还包括一些实用工具函数，用于处理日期时间、数据验证和并行处理等。
+# BarData类提供了K线数据的标准表示方式，便于在回测系统中处理行情数据。

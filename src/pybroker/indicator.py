@@ -306,13 +306,13 @@ class IndicatorsMixin:
 
 
 class IndicatorSet(IndicatorsMixin):
-    """Computes data for multiple indicators."""
+    """计算多个指标的数据。"""
 
     def __init__(self):
         self._ind_names: set[str] = set()
 
     def add(self, indicators: Union[Indicator, Iterable[Indicator]], *args):
-        """Adds indicators."""
+        """添加指标。"""
         if isinstance(indicators, Indicator):
             indicators = (indicators, *args)
         else:
@@ -320,7 +320,7 @@ class IndicatorSet(IndicatorsMixin):
         self._ind_names.update(map(op.attrgetter("name"), indicators))
 
     def remove(self, indicators: Union[Indicator, Iterable[Indicator]], *args):
-        """Removes indicators."""
+        """移除指标。"""
         if isinstance(indicators, Indicator):
             indicators = (indicators, *args)
         else:
@@ -330,22 +330,22 @@ class IndicatorSet(IndicatorsMixin):
         )
 
     def clear(self):
-        """Removes all indicators."""
+        """移除所有指标。"""
         self._ind_names.clear()
 
     def __call__(
         self, df: pd.DataFrame, disable_parallel: bool = False
     ) -> pd.DataFrame:
-        """Computes indicator data.
+        """计算指标数据。
 
-        Args:
-            df: :class:`pandas.DataFrame` of input data.
-            disable_parallel: If ``True``, indicator data is computed serially.
-                If ``False``, indicator data is computed in parallel using
-                multiple processes. Defaults to ``False``.
+        参数:
+            df: 输入数据的 :class:`pandas.DataFrame`。
+            disable_parallel: 如果为 ``True``，指标数据将串行计算。
+                如果为 ``False``，指标数据将使用多进程并行计算。
+                默认为 ``False``。
 
-        Returns:
-            :class:`pandas.DataFrame` containing the computed indicator data.
+        返回:
+            包含计算出的指标数据的 :class:`pandas.DataFrame`。
         """
         if not self._ind_names:
             raise ValueError("No indicators were added.")
@@ -382,16 +382,15 @@ class IndicatorSet(IndicatorsMixin):
 
 
 def highest(name: str, field: str, period: int) -> Indicator:
-    """Creates a rolling high :class:`.Indicator`.
+    """创建一个滚动高点 :class:`.Indicator`。
 
-    Args:
-        name: Indicator name.
-        field: :class:`pybroker.common.BarData` field for computing the rolling
-            high.
-        period: Lookback period.
+    参数:
+        name: 指标名称。
+        field: 用于计算滚动高点的 :class:`pybroker.common.BarData` 字段。
+        period: 回看周期。
 
-    Returns:
-        Rolling high :class:`.Indicator`.
+    返回:
+        滚动高点 :class:`.Indicator`。
     """
 
     def _highest(data: BarData):
@@ -402,16 +401,15 @@ def highest(name: str, field: str, period: int) -> Indicator:
 
 
 def lowest(name: str, field: str, period: int) -> Indicator:
-    """Creates a rolling low :class:`.Indicator`.
+    """创建一个滚动低点 :class:`.Indicator`。
 
-    Args:
-        name: Indicator name.
-        field: :class:`pybroker.common.BarData` field for computing the rolling
-            low.
-        period: Lookback period.
+    参数:
+        name: 指标名称。
+        field: 用于计算滚动低点的 :class:`pybroker.common.BarData` 字段。
+        period: 回看周期。
 
-    Returns:
-        Rolling low :class:`.Indicator`.
+    返回:
+        滚动低点 :class:`.Indicator`。
     """
 
     def _lowest(data: BarData):
@@ -422,16 +420,15 @@ def lowest(name: str, field: str, period: int) -> Indicator:
 
 
 def returns(name: str, field: str, period: int = 1) -> Indicator:
-    """Creates a rolling returns :class:`.Indicator`.
+    """创建一个滚动回报率 :class:`.Indicator`。
 
-    Args:
-        name: Indicator name.
-        field: :class:`pybroker.common.BarData` field for computing the rolling
-            returns.
-        period: Returns period. Defaults to 1.
+    参数:
+        name: 指标名称。
+        field: 用于计算滚动回报率的 :class:`pybroker.common.BarData` 字段。
+        period: 回报率周期。默认为 1。
 
-    Returns:
-        Rolling returns :class:`.Indicator`.
+    返回:
+        滚动回报率 :class:`.Indicator`。
     """
 
     def _returns(data: BarData):
@@ -444,17 +441,17 @@ def returns(name: str, field: str, period: int = 1) -> Indicator:
 def detrended_rsi(
     name: str, field: str, short_length: int, long_length: int, reg_length: int
 ) -> Indicator:
-    """Detrended Relative Strength Index (RSI).
+    """去趋势相对强弱指数 (RSI)。
 
-    Args:
-        name: Indicator name.
-        field: :class:`pybroker.common.BarData` field name.
-        short_length: Lookback for the short-term RSI.
-        long_length: Lookback for the long-term RSI.
-        reg_length: Number of bars used for linear regressions.
+    参数:
+        name: 指标名称。
+        field: :class:`pybroker.common.BarData` 字段名称。
+        short_length: 短期 RSI 的回看期。
+        long_length: 长期 RSI 的回看期。
+        reg_length: 用于线性回归的K线数量。
 
-    Returns:
-        Detrended RSI :class:`.Indicator`.
+    返回:
+        去趋势 RSI :class:`.Indicator`。
     """
 
     def _detrended_rsi(data: BarData):
@@ -476,19 +473,18 @@ def macd(
     smoothing: float = 0.0,
     scale: float = 1.0,
 ) -> Indicator:
-    """Moving Average Convergence Divergence.
+    """移动平均收敛散度 (MACD)。
 
-    Args:
-        name: Indicator name.
-        field: :class:`pybroker.common.BarData` field name.
-        short_length: Short-term lookback.
-        long_length: Long-term lookback.
-        smoothing: Compute MACD minus smoothed if >= 2.
-        scale: Increase > 1.0 for more compression of return values,
-            decrease < 1.0 for less. Defaults to ``1.0``.
+    参数:
+        name: 指标名称。
+        short_length: 短期回看期。
+        long_length: 长期回看期。
+        smoothing: 如果 >= 2，则计算 MACD 减去平滑值。
+        scale: 增加 > 1.0 会对返回值进行更多压缩，
+            减少 < 1.0 则压缩更少。默认为 ``1.0``。
 
-    Returns:
-        Moving Average Convergence Divergence :class:`.Indicator`.
+    返回:
+        移动平均收敛散度 :class:`.Indicator`。
     """
 
     def _macd(data: BarData):
@@ -506,16 +502,16 @@ def macd(
 
 
 def stochastic(name: str, lookback: int, smoothing: int = 0) -> Indicator:
-    """Stochastic.
+    """随机指标。
 
-    Args:
-        name: Indicator name.
-        lookback: Number of lookback bars.
-        smoothing: Number of times the raw stochastic is smoothed, either 0,
-            1, or 2 times. Defaults to ``0``.
+    参数:
+        name: 指标名称。
+        lookback: 回看K线数量。
+        smoothing: 原始随机指标被平滑的次数，可以是 0、
+            1 或 2 次。默认为 ``0``。
 
-    Returns:
-        Stochastic :class:`.Indicator`.
+    返回:
+        随机指标 :class:`.Indicator`。
     """
 
     def _stochastic(data: BarData):
@@ -537,17 +533,17 @@ def stochastic_rsi(
     sto_lookback: int,
     smoothing: float = 0.0,
 ) -> Indicator:
-    """Stochastic Relative Strength Index (RSI).
+    """随机相对强弱指数 (RSI)。
 
-    Args:
-        name: Indicator name.
-        field: :class:`pybroker.common.BarData` field name.
-        rsi_lookback: Lookback length for RSI calculation.
-        sto_lookback: Lookback length for Stochastic calculation.
-        smoothing: Amount of smoothing; <= 1 for none. Defaults to ``0``.
+    参数:
+        name: 指标名称。
+        field: :class:`pybroker.common.BarData` 字段名称。
+        rsi_lookback: RSI 计算的回看长度。
+        sto_lookback: 随机指标计算的回看长度。
+        smoothing: 平滑量；<= 1 表示不平滑。默认为 ``0``。
 
-    Returns:
-        Stochastic RSI :class:`.Indicator`.
+    返回:
+        随机 RSI :class:`.Indicator`。
     """
 
     def _stochastic_rsi(data: BarData):
@@ -565,19 +561,19 @@ def stochastic_rsi(
 def linear_trend(
     name: str, field: str, lookback: int, atr_length: int, scale: float = 1.0
 ) -> Indicator:
-    """Linear Trend Strength.
+    """线性趋势强度。
 
-    Args:
-        name: Indicator name.
-        field: :class:`pybroker.common.BarData` field name.
-        lookback: Number of lookback bars.
-        atr_length: Lookback length used for Average True Range (ATR)
-            normalization.
-        scale: Increase > 1.0 for more compression of return values,
-            decrease < 1.0 for less. Defaults to ``1.0``.
+    参数:
+        name: 指标名称。
+        field: :class:`pybroker.common.BarData` 字段名称。
+        lookback: 回看K线数量。
+        atr_length: 用于平均真实波幅 (ATR)
+            归一化的回看长度。
+        scale: 增加 > 1.0 会对返回值进行更多压缩，
+            减少 < 1.0 则压缩更少。默认为 ``1.0``。
 
-    Returns:
-        Linear Trend Strength :class:`.Indicator`.
+    返回:
+        线性趋势强度 :class:`.Indicator`。
     """
 
     def _linear_trend(data: BarData):
@@ -598,19 +594,19 @@ def linear_trend(
 def quadratic_trend(
     name: str, field: str, lookback: int, atr_length: int, scale: float = 1.0
 ) -> Indicator:
-    """Quadratic Trend Strength.
+    """二次趋势强度。
 
-    Args:
-        name: Indicator name.
-        field: :class:`pybroker.common.BarData` field name.
-        lookback: Number of lookback bars.
-        atr_length: Lookback length used for Average True Range (ATR)
-            normalization.
-        scale: Increase > 1.0 for more compression of return values,
-            decrease < 1.0 for less. Defaults to ``1.0``.
+    参数:
+        name: 指标名称。
+        field: :class:`pybroker.common.BarData` 字段名称。
+        lookback: 回看K线数量。
+        atr_length: 用于平均真实波幅 (ATR)
+            归一化的回看长度。
+        scale: 增加 > 1.0 会对返回值进行更多压缩，
+            减少 < 1.0 则压缩更少。默认为 ``1.0``。
 
-    Returns:
-        Quadratic Trend Strength :class:`.Indicator`.
+    返回:
+        二次趋势强度 :class:`.Indicator`。
     """
 
     def _quadratic_trend(data: BarData):
@@ -631,19 +627,19 @@ def quadratic_trend(
 def cubic_trend(
     name: str, field: str, lookback: int, atr_length: int, scale: float = 1.0
 ) -> Indicator:
-    """Cubic Trend Strength.
+    """三次趋势强度。
 
-    Args:
-        name: Indicator name.
-        field: :class:`pybroker.common.BarData` field name.
-        lookback: Number of lookback bars.
-        atr_length: Lookback length used for Average True Range (ATR)
-            normalization.
-        scale: Increase > 1.0 for more compression of return values,
-            decrease < 1.0 for less. Defaults to ``1.0``.
+    参数:
+        name: 指标名称。
+        field: :class:`pybroker.common.BarData` 字段名称。
+        lookback: 回看K线数量。
+        atr_length: 用于平均真实波幅 (ATR)
+            归一化的回看长度。
+        scale: 增加 > 1.0 会对返回值进行更多压缩，
+            减少 < 1.0 则压缩更少。默认为 ``1.0``。
 
-    Returns:
-        Cubic Trend Strength :class:`.Indicator`.
+    返回:
+        三次趋势强度 :class:`.Indicator`。
     """
 
     def _cubic_trend(data: BarData):
@@ -662,14 +658,14 @@ def cubic_trend(
 
 
 def adx(name: str, lookback: int) -> Indicator:
-    """Average Directional Movement Index.
+    """平均动向指数。
 
-    Args:
-        name: Indicator name.
-        lookback: Number of lookback bars.
+    参数:
+        name: 指标名称。
+        lookback: 回看K线数量。
 
-    Returns:
-        Average Directional Movement Index :class:`.Indicator`.
+    返回:
+        平均动向指数 :class:`.Indicator`。
     """
 
     def _adx(data: BarData):
@@ -681,14 +677,14 @@ def adx(name: str, lookback: int) -> Indicator:
 
 
 def aroon_up(name: str, lookback: int) -> Indicator:
-    """Aroon Upward Trend.
+    """阿隆上升趋势。
 
-    Args:
-        name: Indicator name.
-        lookback: Number of lookback bars.
+    参数:
+        name: 指标名称。
+        lookback: 回看K线数量。
 
-    Returns:
-        Aroon Upward Trend :class:`.Indicator`.
+    返回:
+        阿隆上升趋势 :class:`.Indicator`。
     """
 
     def _aroon_up(data: BarData):
@@ -698,14 +694,14 @@ def aroon_up(name: str, lookback: int) -> Indicator:
 
 
 def aroon_down(name: str, lookback: int) -> Indicator:
-    """Aroon Downward Trend.
+    """阿隆下降趋势。
 
-    Args:
-        name: Indicator name.
-        lookback: Number of lookback bars.
+    参数:
+        name: 指标名称。
+        lookback: 回看K线数量。
 
-    Returns:
-        Aroon Downward Trend :class:`.Indicator`.
+    返回:
+        阿隆下降趋势 :class:`.Indicator`。
     """
 
     def _aroon_down(data: BarData):
@@ -715,14 +711,14 @@ def aroon_down(name: str, lookback: int) -> Indicator:
 
 
 def aroon_diff(name: str, lookback: int) -> Indicator:
-    """Aroon Upward Trend minus Aroon Downward Trend.
+    """阿隆上升趋势减去阿隆下降趋势。
 
-    Args:
-        name: Indicator name.
-        lookback: Number of lookback bars.
+    参数:
+        name: 指标名称。
+        lookback: 回看K线数量。
 
-    Returns:
-        Aroon Upward Trend minus Aroon Downward Trend :class:`.Indicator`.
+    返回:
+        阿隆上升趋势减去阿隆下降趋势 :class:`.Indicator`。
     """
 
     def _aroon_diff(data: BarData):
@@ -734,18 +730,18 @@ def aroon_diff(name: str, lookback: int) -> Indicator:
 def close_minus_ma(
     name: str, lookback: int, atr_length: int, scale: float = 1.0
 ) -> Indicator:
-    """Close Minus Moving Average.
+    """收盘价减移动平均线。
 
-    Args:
-        name: Indicator name.
-        lookback: Number of lookback bars.
-        atr_length: Lookback length used for Average True Range (ATR)
-            normalization.
-        scale: Increase > 1.0 for more compression of return values,
-            decrease < 1.0 for less. Defaults to ``1.0``.
+    参数:
+        name: 指标名称。
+        lookback: 回看K线数量。
+        atr_length: 用于平均真实波幅 (ATR)
+            归一化的回看长度。
+        scale: 增加 > 1.0 会对返回值进行更多压缩，
+            减少 < 1.0 则压缩更少。默认为 ``1.0``。
 
-    Returns:
-        Close Minus Moving Average :class:`.Indicator`.
+    返回:
+        收盘价减移动平均线 :class:`.Indicator`。
     """
 
     def _close_minus_ma(data: BarData):
@@ -764,17 +760,17 @@ def close_minus_ma(
 def linear_deviation(
     name: str, field: str, lookback: int, scale: float = 0.6
 ) -> Indicator:
-    """Deviation from Linear Trend.
+    """线性趋势的偏差。
 
-    Args:
-        name: Indicator name.
-        field: :class:`pybroker.common.BarData` field name.
-        lookback: Number of lookback bars.
-        scale: Increase > 1.0 for more compression of return values,
-            decrease < 1.0 for less. Defaults to ``0.6``.
+    参数:
+        name: 指标名称。
+        field: :class:`pybroker.common.BarData` 字段名称。
+        lookback: 回看K线数量。
+        scale: 增加 > 1.0 会对返回值进行更多压缩，
+            减少 < 1.0 则压缩更少。默认为 ``0.6``。
 
-    Returns:
-        Deviation from Linear Trend :class:`.Indicator`.
+    返回:
+        线性趋势的偏差 :class:`.Indicator`。
     """
 
     def _linear_deviation(data: BarData):
@@ -787,17 +783,17 @@ def linear_deviation(
 def quadratic_deviation(
     name: str, field: str, lookback: int, scale: float = 0.6
 ) -> Indicator:
-    """Deviation from Quadratic Trend.
+    """二次趋势的偏差。
 
-    Args:
-        name: Indicator name.
-        field: :class:`pybroker.common.BarData` field name.
-        lookback: Number of lookback bars.
-        scale: Increase > 1.0 for more compression of return values,
-            decrease < 1.0 for less. Defaults to ``0.6``.
+    参数:
+        name: 指标名称。
+        field: :class:`pybroker.common.BarData` 字段名称。
+        lookback: 回看K线数量。
+        scale: 增加 > 1.0 会对返回值进行更多压缩，
+            减少 < 1.0 则压缩更少。默认为 ``0.6``。
 
-    Returns:
-        Deviation from Quadratic Trend :class:`.Indicator`.
+    返回:
+        二次趋势的偏差 :class:`.Indicator`。
     """
 
     def _quadratic_deviation(data: BarData):
@@ -810,17 +806,17 @@ def quadratic_deviation(
 def cubic_deviation(
     name: str, field: str, lookback: int, scale: float = 0.6
 ) -> Indicator:
-    """Deviation from Cubic Trend.
+    """三次趋势的偏差。
 
-    Args:
-        name: Indicator name.
-        field: :class:`pybroker.common.BarData` field name.
-        lookback: Number of lookback bars.
-        scale: Increase > 1.0 for more compression of return values,
-            decrease < 1.0 for less. Defaults to ``0.6``.
+    参数:
+        name: 指标名称。
+        field: :class:`pybroker.common.BarData` 字段名称。
+        lookback: 回看K线数量。
+        scale: 增加 > 1.0 会对返回值进行更多压缩，
+            减少 < 1.0 则压缩更少。默认为 ``0.6``。
 
-    Returns:
-        Deviation from Cubic Trend :class:`.Indicator`.
+    返回:
+        三次趋势的偏差 :class:`.Indicator`。
     """
 
     def _cubic_deviation(data: BarData):
@@ -833,16 +829,16 @@ def cubic_deviation(
 def price_intensity(
     name: str, smoothing: float = 0.0, scale: float = 0.8
 ) -> Indicator:
-    """Price Intensity.
+    """价格强度。
 
-    Args:
-        name: Indicator name.
-        smoothing: Amount of smoothing. Defaults to ``0``.
-        scale: Increase > 1.0 for more compression of return values,
-            decrease < 1.0 for less. Defaults to ``0.8``.
+    参数:
+        name: 指标名称。
+        smoothing: 平滑量。默认为 ``0``。
+        scale: 增加 > 1.0 会对返回值进行更多压缩，
+            减少 < 1.0 则压缩更少。默认为 ``0.8``。
 
-    Returns:
-        Price Intensity :class:`.Indicator`.
+    返回:
+        价格强度 :class:`.Indicator`。
     """
 
     def _price_intensity(data: BarData):
@@ -861,18 +857,18 @@ def price_intensity(
 def price_change_oscillator(
     name: str, short_length: int, multiplier: int, scale: float = 4.0
 ) -> Indicator:
-    """Price Change Oscillator.
+    """价格变动振荡器。
 
-    Args:
-        name: Indicator name.
-        short_length: Number of short lookback bars.
-        multiplier: Multiplier used to compute number of long lookback bars =
-            ``multiplier * short_length``.
-        scale: Increase > 1.0 for more compression of return values,
-            decrease < 1.0 for less. Defaults to ``4.0``.
+    参数:
+        name: 指标名称。
+        short_length: 短期回看K线数量。
+        multiplier: 用于计算长期回看K线数量的乘数 =
+            ``multiplier * short_length``。
+        scale: 增加 > 1.0 会对返回值进行更多压缩，
+            减少 < 1.0 则压缩更少。默认为 ``4.0``。
 
-    Returns:
-        Price Change Oscillator :class:`.Indicator`.
+    返回:
+        价格变动振荡器 :class:`.Indicator`。
     """
 
     def _price_change_oscillator(data: BarData):
@@ -891,15 +887,15 @@ def price_change_oscillator(
 def intraday_intensity(
     name: str, lookback: int, smoothing: float = 0.0
 ) -> Indicator:
-    """Intraday Intensity.
+    """日内强度。
 
-    Args:
-        name: Indicator name.
-        lookback: Number of lookback bars.
-        smoothing: Amount of smoothing; <= 1 for none. Defaults to ``0``.
+    参数:
+        name: 指标名称。
+        lookback: 回看K线数量。
+        smoothing: 平滑量；<= 1 表示不平滑。默认为 ``0``。
 
-    Returns:
-        Intraday Intensity :class:`.Indicator`.
+    返回:
+        日内强度 :class:`.Indicator`。
     """
 
     def _intraday_intensity(data: BarData):
@@ -916,15 +912,15 @@ def intraday_intensity(
 
 
 def money_flow(name: str, lookback: int, smoothing: float = 0.0) -> Indicator:
-    """Chaikin's Money Flow.
+    """蔡金资金流。
 
-    Args:
-        name: Indicator name.
-        lookback: Number of lookback bars.
-        smoothing: Amount of smoothing; <= 1 for none. Defaults to ``0``.
+    参数:
+        name: 指标名称。
+        lookback: 回看K线数量。
+        smoothing: 平滑量；<= 1 表示不平滑。默认为 ``0``。
 
-    Returns:
-        Chaikin's Money Flow :class:`.Indicator`.
+    返回:
+        蔡金资金流 :class:`.Indicator`。
     """
 
     def _money_flow(data: BarData):
@@ -943,17 +939,17 @@ def money_flow(name: str, lookback: int, smoothing: float = 0.0) -> Indicator:
 def reactivity(
     name: str, lookback: int, smoothing: float = 0.0, scale: float = 0.6
 ) -> Indicator:
-    """Reactivity.
+    """反应性。
 
-    Args:
-        name: Indicator name.
-        lookback: Number of lookback bars.
-        smoothing: Smoothing multiplier.
-        scale: Increase > 1.0 for more compression of return values,
-            decrease < 1.0 for less. Defaults to ``0.6``.
+    参数:
+        name: 指标名称。
+        lookback: 回看K线数量。
+        smoothing: 平滑乘数。
+        scale: 增加 > 1.0 会对返回值进行更多压缩，
+            减少 < 1.0 则压缩更少。默认为 ``0.6``。
 
-    Returns:
-        Reactivity :class:`.Indicator`.
+    返回:
+        反应性 :class:`.Indicator`。
     """
 
     def _reactivity(data: BarData):
@@ -973,16 +969,16 @@ def reactivity(
 def price_volume_fit(
     name: str, lookback: int, scale: float = 9.0
 ) -> Indicator:
-    """Price Volume Fit.
+    """价量拟合。
 
-    Args:
-        name: Indicator name.
-        lookback: Number of lookback bars.
-        scale: Increase > 1.0 for more compression of return values,
-            decrease < 1.0 for less. Defaults to ``9.0``.
+    参数:
+        name: 指标名称。
+        lookback: 回看K线数量。
+        scale: 增加 > 1.0 会对返回值进行更多压缩，
+            减少 < 1.0 则压缩更少。默认为 ``9.0``。
 
-    Returns:
-        Price Volume Fit :class:`.Indicator`.
+    返回:
+        价量拟合 :class:`.Indicator`。
     """
 
     def _price_volume_fit(data: BarData):
@@ -999,16 +995,16 @@ def price_volume_fit(
 def volume_weighted_ma_ratio(
     name: str, lookback: int, scale: float = 1.0
 ) -> Indicator:
-    """Volume-Weighted Moving Average Ratio.
+    """成交量加权移动平均比率。
 
-    Args:
-        name: Indicator name.
-        lookback: Number of lookback bars.
-        scale: Increase > 1.0 for more compression of return values,
-            decrease < 1.0 for less. Defaults to ``1.0``.
+    参数:
+        name: 指标名称。
+        lookback: 回看K线数量。
+        scale: 增加 > 1.0 会对返回值进行更多压缩，
+            减少 < 1.0 则压缩更少。默认为 ``1.0``。
 
-    Returns:
-        Volume-Weighted Moving Average Ratio :class:`.Indicator`.
+    返回:
+        成交量加权移动平均比率 :class:`.Indicator`。
     """
 
     def _volume_weighted_ma_ratio(data: BarData):
@@ -1025,16 +1021,16 @@ def volume_weighted_ma_ratio(
 def normalized_on_balance_volume(
     name: str, lookback: int, scale: float = 0.6
 ) -> Indicator:
-    """Normalized On-Balance Volume.
+    """归一化能量潮。
 
-    Args:
-        name: Indicator name.
-        lookback: Number of lookback bars.
-        scale: Increase > 1.0 for more compression of return values,
-            decrease < 1.0 for less. Defaults to ``0.6``.
+    参数:
+        name: 指标名称。
+        lookback: 回看K线数量。
+        scale: 增加 > 1.0 会对返回值进行更多压缩，
+            减少 < 1.0 则压缩更少。默认为 ``0.6``。
 
-    Returns:
-        Normalized On-Balance Volume :class:`.Indicator`.
+    返回:
+        归一化能量潮 :class:`.Indicator`。
     """
 
     def _normalized_on_balance_volume(data: BarData):
@@ -1051,17 +1047,17 @@ def normalized_on_balance_volume(
 def delta_on_balance_volume(
     name: str, lookback: int, delta_length: int = 0, scale: float = 0.6
 ) -> Indicator:
-    """Delta On-Balance Volume.
+    """能量潮变化量。
 
-    Args:
-        name: Indicator name.
-        lookback: Number of lookback bars.
-        delta_length: Lag for differencing.
-        scale: Increase > 1.0 for more compression of return values,
-            decrease < 1.0 for less. Defaults to ``0.6``.
+    参数:
+        name: 指标名称。
+        lookback: 回看K线数量。
+        delta_length: 用于差分的滞后值。
+        scale: 增加 > 1.0 会对返回值进行更多压缩，
+            减少 < 1.0 则压缩更少。默认为 ``0.6``。
 
-    Returns:
-        Delta On-Balance Volume :class:`.Indicator`.
+    返回:
+        能量潮变化量 :class:`.Indicator`。
     """
 
     def _delta_on_balance_volume(data: BarData):
@@ -1079,16 +1075,16 @@ def delta_on_balance_volume(
 def normalized_positive_volume_index(
     name: str, lookback: int, scale: float = 0.5
 ) -> Indicator:
-    """Normalized Positive Volume Index.
+    """归一化正成交量指数。
 
-    Args:
-        name: Indicator name.
-        lookback: Number of lookback bars.
-        scale: Increase > 1.0 for more compression of return values,
-            decrease < 1.0 for less. Defaults to ``0.5``.
+    参数:
+        name: 指标名称。
+        lookback: 回看K线数量。
+        scale: 增加 > 1.0 会对返回值进行更多压缩，
+            减少 < 1.0 则压缩更少。默认为 ``0.5``。
 
-    Returns:
-        Normalized Positive Volume Index :class:`.Indicator`.
+    返回:
+        归一化正成交量指数 :class:`.Indicator`。
     """
 
     def _normalized_positive_volume_index(data: BarData):
@@ -1105,16 +1101,16 @@ def normalized_positive_volume_index(
 def normalized_negative_volume_index(
     name: str, lookback: int, scale: float = 0.5
 ) -> Indicator:
-    """Normalized Negative Volume Index.
+    """归一化负成交量指数。
 
-    Args:
-        name: Indicator name.
-        lookback: Number of lookback bars.
-        scale: Increase > 1.0 for more compression of return values,
-            decrease < 1.0 for less. Defaults to ``0.5``.
+    参数:
+        name: 指标名称。
+        lookback: 回看K线数量。
+        scale: 增加 > 1.0 会对返回值进行更多压缩，
+            减少 < 1.0 则压缩更少。默认为 ``0.5``。
 
-    Returns:
-        Normalized Negative Volume Index :class:`.Indicator`.
+    返回:
+        归一化负成交量指数 :class:`.Indicator`。
     """
 
     def _normalized_negative_volume_index(data: BarData):
@@ -1131,17 +1127,17 @@ def normalized_negative_volume_index(
 def volume_momentum(
     name: str, short_length: int, multiplier: int = 2, scale: float = 3.0
 ) -> Indicator:
-    """Volume Momentum.
+    """成交量动量。
 
-    Args:
-        name: Indicator name.
-        short_length: Number of short lookback bars.
-        multiplier: Lookback multiplier. Defaults to ``2``.
-        scale: Increase > 1.0 for more compression of return values,
-            decrease < 1.0 for less. Defaults to ``3.0``.
+    参数:
+        name: 指标名称。
+        short_length: 短期回看K线数量。
+        multiplier: 回看乘数。默认为 ``2``。
+        scale: 增加 > 1.0 会对返回值进行更多压缩，
+            减少 < 1.0 则压缩更少。默认为 ``3.0``。
 
-    Returns:
-        Volume Momentum :class:`.Indicator`.
+    返回:
+        成交量动量 :class:`.Indicator`。
     """
 
     def _volume_momentum(data: BarData):
@@ -1156,14 +1152,14 @@ def volume_momentum(
 
 
 def laguerre_rsi(name: str, fe_length: int = 13) -> Indicator:
-    """Laguerre Relative Strength Index (RSI).
+    """拉盖尔相对强弱指数 (RSI)。
 
-    Args:
-        name: Indicator name.
-        fe_length: Fractal Energy length. Defaults to ``13``.
+    参数:
+        name: 指标名称。
+        fe_length: 分形能量长度。默认为 ``13``。
 
-    Returns:
-        Laguerre RSI :class:`.Indicator`.
+    返回:
+        拉盖尔相对强弱指数 (RSI) :class:`.Indicator`。
     """
 
     def _laguerre_rsi(data: BarData):

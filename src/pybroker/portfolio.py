@@ -331,49 +331,44 @@ def _calculate_pnl_mae_mfe(
 
 
 class Portfolio:
-    r"""Class representing a portfolio of holdings. The portfolio contains
-    information about open positions and balances, and is also used to place
-    buy and sell orders.
+    r"""代表持仓投资组合的类。投资组合包含
+    有关未平仓头寸和余额的信息，也用于下达
+    买卖订单。
 
-    Args:
-        cash: Starting cash balance.
-        fee_mode: Brokerage fee mode.
-        fee_amount: Brokerage fee amount.
-        subtract_fees: Whether to subtract fees from the cash balance after an
-            order is filled.
-        enable_fractional_shares: Whether to enable trading fractional shares.
-        position_mode: Position mode for :class:`.Portfolio`.
-        max_long_positions: Maximum number of long :class:`.Position`\ s that
-            can be held at a time. If ``None``, then unlimited.
-        max_short_positions: Maximum number of short :class:`.Position`\ s that
-            can be held at a time. If ``None``, then unlimited.
-        record_stops: Whether to record stop data per-bar.
+    参数:
+        cash: 初始现金余额。
+        fee_mode: 经纪费模式。
+        fee_amount: 经纪费金额。
+        subtract_fees: 是否在订单成交后从现金余额中扣除费用。
+        enable_fractional_shares: 是否启用分数股交易。
+        position_mode: :class:`.Portfolio` 的持仓模式。
+        max_long_positions: 可同时持有的最大多头 :class:`.Position` 数量。
+            如果为 ``None``，则无限制。
+        max_short_positions: 可同时持有的最大空头 :class:`.Position` 数量。
+            如果为 ``None``，则无限制。
+        record_stops: 是否逐笔记录止损数据。
 
-    Attributes:
-        cash: Current cash balance.
-        equity: Current amount of equity.
-        market_value: Current market value. The market value is defined as
-            the amount of equity held in cash and long positions added together
-            with the unrealized PnL of all open short positions.
-        fees: Current brokerage fees.
-        fee_amount: Brokerage fee amount.
-        subtract_fees: Whether to subtract fees from the cash balance.
-        enable_fractional_shares: Whether to enable trading fractional shares.
-        orders: ``deque`` of all filled orders, sorted in ascending
-            chronological order.
-        margin: Current amount of margin held in open positions.
-        pnl: Realized profit and loss (PnL).
-        long_positions: ``dict`` mapping ticker symbols to open long
-            :class:`.Position`\ s.
-        short_positions: ``dict`` mapping ticker symbols to open short
-            :class:`.Position`\ s.
-        symbols: Ticker symbols of all currently open positions.
-        bars: ``deque`` of snapshots of :class:`.Portfolio` state on every bar,
-            sorted in ascending chronological order.
-        position_bars: ``deque`` of snapshots of :class:`.Position` states on
-            every bar, sorted in ascending chronological order.
-        win_rate: Running win rate of trades.
-        loss_rate: Running loss rate of trades.
+    属性:
+        cash: 当前现金余额。
+        equity: 当前权益金额。
+        market_value: 当前市值。市值定义为
+            现金和多头头寸中持有的权益与所有未平仓空头头寸的未实现盈亏之和。
+        fees: 当前经纪费用。
+        fee_amount: 经纪费金额。
+        subtract_fees: 是否从现金余额中扣除费用。
+        enable_fractional_shares: 是否启用分数股交易。
+        orders: 所有已成交订单的 ``deque``，按时间升序排列。
+        margin: 未平仓头寸中持有的当前保证金金额。
+        pnl: 已实现盈亏 (PnL)。
+        long_positions: 将股票代码映射到未平仓多头 :class:`.Position` 的 ``dict``。
+        short_positions: 将股票代码映射到未平仓空头 :class:`.Position` 的 ``dict``。
+        symbols: 所有当前未平仓头寸的股票代码。
+        bars: 每个K线上 :class:`.Portfolio` 状态快照的 ``deque``，
+            按时间升序排列。
+        position_bars: 每个K线上 :class:`.Position` 状态快照的 ``deque``，
+            按时间升序排列。
+        win_rate: 交易的即时胜率。
+        loss_rate: 交易的即时亏损率。
     """
 
     def __init__(
@@ -615,19 +610,18 @@ class Portfolio:
         limit_price: Optional[Decimal] = None,
         stops: Optional[Iterable[Stop]] = None,
     ) -> Optional[Order]:
-        r"""Places a buy order.
+        r"""下达买单。
 
-        Args:
-            date: Date when the :class:`.Order` is placed.
-            symbol: Ticker symbol to buy.
-            shares: Number of shares to buy.
-            fill_price: If filled, the price used to fill the :class:`.Order`.
-            limit_price: Limit price of the :class:`.Order`.
-            stops: :class:`.Stop`\ s to set on the :class:`.Entry` created from
-                the :class:`.Order`, if filled.
+        参数:
+            date: 下达 :class:`.Order` 的日期。
+            symbol: 要购买的股票代码。
+            shares: 要购买的股数。
+            fill_price: 如果成交，用于成交 :class:`.Order` 的价格。
+            limit_price: :class:`.Order` 的限价。
+            stops: 如果成交，在从 :class:`.Order` 创建的 :class:`.Entry` 上设置的 :class:`.Stop`。
 
-        Returns:
-            :class:`.Order` if the order was filled, otherwise ``None``.
+        返回:
+            如果订单成交，则返回 :class:`.Order`，否则返回 ``None``。
         """
         self._verify_input(shares, fill_price, limit_price)
         self._logger.debug_place_buy_order(
@@ -788,19 +782,18 @@ class Portfolio:
         limit_price: Optional[Decimal] = None,
         stops: Optional[Iterable[Stop]] = None,
     ) -> Optional[Order]:
-        r"""Places a sell order.
+        r"""下达卖单。
 
-        Args:
-            date: Date when the :class:`.Order` is placed.
-            symbol: Ticker symbol to sell.
-            shares: Number of shares to sell.
-            fill_price: If filled, the price used to fill the :class:`.Order`.
-            limit_price: Limit price of the :class:`.Order`.
-            stops: :class:`.Stop`\ s to set on the :class:`.Entry` created from
-                the :class:`.Order`, if filled.
+        参数:
+            date: 下达 :class:`.Order` 的日期。
+            symbol: 要卖出的股票代码。
+            shares: 要卖出的股数。
+            fill_price: 如果成交，用于成交 :class:`.Order` 的价格。
+            limit_price: :class:`.Order` 的限价。
+            stops: 如果成交，在从 :class:`.Order` 创建的 :class:`.Entry` 上设置的 :class:`.Stop`。
 
-        Returns:
-            :class:`.Order` if the order was filled, otherwise ``None``.
+        返回:
+            如果订单成交，则返回 :class:`.Order`，否则返回 ``None``。
         """
         self._verify_input(shares, fill_price, limit_price)
         self._logger.debug_place_sell_order(
@@ -958,8 +951,7 @@ class Portfolio:
         buy_fill_price: Decimal,
         sell_fill_price: Decimal,
     ):
-        """Exits any long and short positions for ``symbol`` at
-        ``buy_fill_price`` and ``sell_fill_price``.
+        """在 ``buy_fill_price`` 和 ``sell_fill_price`` 价位退出 ``symbol`` 的任何多头和空头头寸。
         """
         if symbol in self.long_positions:
             self.sell(
@@ -977,11 +969,11 @@ class Portfolio:
             )
 
     def capture_bar(self, date: np.datetime64, df: pd.DataFrame):
-        """Captures portfolio state of the current bar.
+        """捕获当前K线的投资组合状态。
 
-        Args:
-            date: Date of current bar.
-            df: :class:`pandas.DataFrame` containing close prices.
+        参数:
+            date: 当前K线的日期。
+            df: 包含收盘价的 :class:`pandas.DataFrame`。
         """
         total_equity = self.cash
         total_market_value = total_equity
@@ -1069,7 +1061,7 @@ class Portfolio:
         )
 
     def incr_bars(self):
-        """Increments the number of bars held by every trade entry."""
+        """增加每个交易入场持有的K线数量。"""
         for pos in itertools.chain(
             self.long_positions.values(), self.short_positions.values()
         ):
@@ -1078,7 +1070,7 @@ class Portfolio:
                 entry.bars += 1
 
     def remove_stop(self, stop_id: int) -> bool:
-        """Removes a :class:`.Stop` with ``stop_id``."""
+        """移除具有 ``stop_id`` 的 :class:`.Stop`。"""
         if stop_id in self._stop_data:
             stop_data = self._stop_data[stop_id]
             del self._stop_data[stop_id]
@@ -1092,12 +1084,11 @@ class Portfolio:
         val: Union[str, Position, Entry],
         stop_type: Optional[StopType] = None,
     ):
-        r"""Removes :class:`.Stop`\ s.
+        r"""移除 :class:`.Stop`。
 
-        Args:
-            val: Ticker symbol, :class:`.Position`, or :class:`.Entry` for
-                which to cancel stops.
-            stop_type: :class:`pybroker.common.StopType`.
+        参数:
+            val: 要取消止损的股票代码、:class:`.Position` 或 :class:`.Entry`。
+            stop_type: :class:`pybroker.common.StopType`。
         """
         if isinstance(val, str):
             if val in self.long_positions:
@@ -1133,7 +1124,7 @@ class Portfolio:
                 self.remove_stop(stop_id)
 
     def check_stops(self, date: np.datetime64, price_scope: PriceScope):
-        """Checks whether stops are triggered."""
+        """检查止损是否被触发。"""
         executed: deque[tuple[Position, Entry]] = deque()
         for pos in itertools.chain(
             self.long_positions.values(), self.short_positions.values()
